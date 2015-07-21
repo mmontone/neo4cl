@@ -9,15 +9,15 @@
   ((protocol :initarg :protocol
              :initform "http"
              :reader protocol
-             :documentation "The protocol by which we should connect to the Neo4J server. Default is 'http', so you should only need to set this explicitly if you're using HTTPS.")
+             :documentation "String; the protocol by which we should connect to the Neo4J server. Default is 'http', so you should only need to set this explicitly if you're using HTTPS.")
    (hostname :initarg :hostname
              :initform "localhost"
              :reader hostname
-             :documentation "The hostname to use when connecting to the Neo4J server. Defaults to 'localhost'.")
+             :documentation "String; the hostname to use when connecting to the Neo4J server. Defaults to 'localhost'.")
    (port :initarg :port
          :initform 7474
          :reader port
-         :documentation "The port on which we connect to the Neo4J server. Defaults to 7474.")
+         :documentation "Integer; the port on which we connect to the Neo4J server. Defaults to 7474.")
    (dbuser :initarg :dbuser
            :initform (error "dbuser is a required initarg.")
            :reader dbuser
@@ -45,7 +45,8 @@ The presence of (:PASSWORD--CHANGE--REQUIRED . T) in the body of the reply, well
 
 (defun change-password (server new-password)
   "Change a Neo4J user's password.
-If the db operation is successful, update the server object so that this takes immediate effect within this server."
+If the db operation is successful, update the server object so that this takes immediate effect within this server.
+NB: remember to update whatever you're using to init"
   (multiple-value-bind (body numeric verbal headers)
   (neo4j-cypher-post-request server
                              `((:password . ,new-password))
