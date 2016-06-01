@@ -5,6 +5,9 @@
   :license "As yet unlicensed"
   :depends-on (#:neo4cl
                #:fiveam)
-  :components ((:file "package")
-               (:file "neo4cl-test")))
+  :components ((:file "neo4cl-test")))
 
+(defpackage #:neo4cl-test
+  (:use #:cl
+        #:neo4cl)
+  (:export neo4cl))
