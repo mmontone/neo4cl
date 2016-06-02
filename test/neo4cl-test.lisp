@@ -30,30 +30,23 @@
   (fiveam:is (listp (neo4cl:neo4j-transaction
                       *server*
                       `((:STATEMENTS
-                          ((:STATEMENT . "CREATE (n:Person { name : {name} }) RETURN n")
+                          ((:STATEMENT . "CREATE (n:Person { properties }) RETURN n")
                            (:PARAMETERS .
                                         ((:properties .
                                                       ((:name . "Andre")))))))))))
   ;; Retrieve a node
   (fiveam:is (equal
-               (car
-                 (second (assoc :data
-                                (neo4cl:neo4j-transaction
-                                  *server*
-                                  `((:STATEMENTS
-                                      ((:STATEMENT . "MATCH (x:Person {name: 'Andre'}) RETURN x.name")
-                                       (:PARAMETERS .
-                                                    ((:properties .
-                                                                  ((:name . "Andre"))))))))))))
-               "Andre"))
+               "Andre"
+               (neo4cl:extract-data-from-get-request
+                 (neo4cl:neo4j-transaction
+                   *server*
+                   '((:STATEMENTS
+                       ((:STATEMENT . "MATCH (x:Person {name: 'Andre'}) RETURN x.name"))))))))
   ;; Delete a node
   (let ((result (neo4cl:neo4j-transaction
                   *server*
                   `((:STATEMENTS
-                      ((:STATEMENT . "MATCH (x:Person {name: 'Andre'}) RETURN x.name")
-                       (:PARAMETERS .
-                                    ((:properties .
-                                                  ((:name . "Andre")))))))))))
+                      ((:STATEMENT . "MATCH (x:Person {name: 'Andre'}) DELETE x")))))))
     (fiveam:is (listp result))
-    (fiveam:is (equal (car (first result)) :columns))
-    (fiveam:is (equal (car (second result)) :data))))
+    (fiveam:is (equal :RESULTS (car (first result))))
+    (fiveam:is (equal :ERRORS (car (second result))))))

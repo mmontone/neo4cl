@@ -48,6 +48,25 @@
         ;; If we received actual content, on the other hand, decode it.
         (cl-json:decode-json-from-string json-string))))
 
+(defun extract-data-from-get-request (response)
+  "Reach into the structure returned by a request that returns data,
+   and return only the actual content."
+  ;; Extract the data portion of the response
+  (let ((data (cdr
+                (assoc :data
+                       (car
+                         ;; Just the results section
+                         (cdr (assoc :results
+                                     ;; The actual query
+                                     response)))))))
+    ;; If there actually is data to be inspected, extract just the row portion.
+    ;; If there isn't, return NIL.
+    (when data
+      (car
+        (cdr
+          (assoc :row
+                 (car data)))))))
+
 
 ;;; Deprecated methods
 
