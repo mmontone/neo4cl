@@ -52,17 +52,11 @@ We'll assume it's a default installation of Neo4J, so it's listening on `http://
 (neo4cl:neo4j-transaction
   *server*
   `((:STATEMENTS
-      ((:STATEMENT . "MATCH (x:Person {name: 'Andre'}) RETURN x.name")
-       (:PARAMETERS .
-                    ((:properties .
-                                  ((:name . "Andre")))))))))
+      ((:STATEMENT . "MATCH (x:Person {name: 'Andre'}) RETURN x.name")))))
 
 ;; We're bored; get rid of him
 (neo4cl:neo4j-transaction
   *server*
   `((:STATEMENTS
-      ((:STATEMENT . "MATCH (x:Person {name: 'Andre'}) RETURN x.name")
-       (:PARAMETERS .
-                    ((:properties .
-                                  ((:name . "Andre")))))))))
+      ((:STATEMENT . "MATCH (x:Person {name: 'Andre'}) DELETE x")))))
 ```
