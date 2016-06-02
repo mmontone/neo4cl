@@ -33,8 +33,7 @@ It comes with a suitably basic test-suite, in the package `neo4cl-test`, which r
 We'll assume it's a default installation of Neo4J, so it's listening on `http://localhost:7474`, and the username and password are both 'neo4j'.
 ```
 (defvar *server*
-  (make-instance 'neo4cl:neo4j-rest-server'
-                 :dbpassword "neo4j"))
+  (make-instance 'neo4cl:neo4j-rest-server))
 
 ;; First, we change the password.
 ;; It changes the password stored in *server* for you, so it continues to "just work."
