@@ -29,8 +29,10 @@
   (:documentation "Neo4j REST API endpoint. Defines all the attributes needed for connecting to it."))
 
 
+(defgeneric base-url (server)
+  (:documentation "Extract the base-url of a Neo4J server, from a neo4j-rest-server object."))
+
 (defmethod base-url ((server neo4j-rest-server))
-  "Extract the base-url of a Neo4J server, from a neo4j-rest-server object."
   (concatenate 'string (protocol server) "://" (hostname server) ":" (princ-to-string (port server))))
 
 
@@ -205,7 +207,7 @@
               ((equal classification "DatabaseError")
                (error 'database-error :category category :title title :message (cdr (assoc :message errors))))
               ;; Anything else.
-              (t (error "Unknown error occurred"))))
+              (t (error "Unknown error occurred: ~A" error-code))))
           ;; If everything's OK, return the values we received along with the status codes
           (values response code reason)))
       ;;; Restart cases start here

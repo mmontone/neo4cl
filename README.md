@@ -20,13 +20,13 @@ Aims at compliance with Neo4J 3.0 via the HTTP API.
 ### How it works
 
 It's organised around a `neo4j-rest-server` object, which holds the details needed for connecting to a Neo4J server. Its initargs and defaults are:
-- :protocol - default = "http"
+- :protocol - default = "http", but can be whatever Drakma will accept
 - :hostname - default = "localhost"
 - :port - default = 7474
 - :dbuser - default = "neo4j"
 - :dbpasswd - default = "neo4j"
 
-It even comes with a suitably basic test-suite, in the package `neo4cl-test`, which requires the FiveAM framework.
+It comes with a suitably basic test-suite, in the package `neo4cl-test`, which requires the FiveAM framework.
 
 
 ## Example usage:
