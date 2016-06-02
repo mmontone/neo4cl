@@ -125,32 +125,28 @@
 ;; The Client sent a bad request - changing the request might yield a successful outcome.
 ;; Effect on transaction: rollback
 (define-condition client-error (error)
-  ((code :initarg :code :reader code)
-   (category :initarg :category :reader category)
+  ((category :initarg :category :reader category)
    (title :initarg :title :reader title)
    (message :initarg :message :reader message)))
 
 ;; There are notifications about the request sent by the client.
 ;; Effect on transaction: none
 (define-condition client-notification ()
-  ((code :initarg :code :reader code)
-   (category :initarg :category :reader category)
+  ((category :initarg :category :reader category)
    (title :initarg :title :reader title)
    (message :initarg :message :reader message)))
 
 ;; The database cannot service the request right now, retrying later might yield a successful outcome.
 ;; Effect on transaction: rollback
 (define-condition transient-error (error)
-  ((code :initarg :code :reader code)
-   (category :initarg :category :reader category)
+  ((category :initarg :category :reader category)
    (title :initarg :title :reader title)
    (message :initarg :message :reader message)))
 
 ;; The database failed to service the request.
 ;; Effect on transaction: rollback
 (define-condition database-error (error)
-  ((code :initarg :code :reader code)
-   (category :initarg :category :reader category)
+  ((category :initarg :category :reader category)
    (title :initarg :title :reader title)
    (message :initarg :message :reader message)))
 
@@ -214,6 +210,6 @@
       ;; The ultimate cop-out: FIDO
       (return-nil () nil)
       ;; Just tell us what went wrong
-      (report-error (e) (format nil "Error code: '~A' Error message: '~A'" (code e) (message e))))))
+      (report-error (e) (format nil "Error code: '~A - ~A' Error message: '~A'" (category e) (title e) (message e))))))
 
 
