@@ -2,7 +2,7 @@
   :serial t
   :description "Basic library for interacting with Neo4J"
   :author "James Fleming <james@electronic-quill.net>"
-  :license "Unlicensed, so far."
+  :license "MIT license"
   :depends-on (#:cl-ppcre ; Check UUID formatting and identify error strings
                #:drakma  ; Send requests to the neo4j server
                #:cl-json ; Encode/decode json requests

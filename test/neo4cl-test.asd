@@ -1,8 +1,8 @@
 (asdf:defsystem #:neo4cl-test
   :serial t
-  :description "Test suite for neo4cl"
+  :license "MIT license"
   :author "James Fleming <james@electronic-quill.net>"
-  :license "As yet unlicensed"
+  :description "Test suite for neo4cl"
   :depends-on (#:neo4cl
                #:fiveam)
   :components ((:file "neo4cl-test")))
