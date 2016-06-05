@@ -1,6 +1,7 @@
 # neo4cl - a CL library for interacting with Neo4J
 
 ## Short description:
+
 A very simple library that takes care of sending Cypher queries to a Neo4J server, and decoding the responses into something useful for processing in CL.
 Aims at compliance with Neo4J 3.0 via the HTTP API.
 
@@ -17,9 +18,19 @@ Aims at compliance with Neo4J 3.0 via the HTTP API.
 - the BOLT protocol. I'll be happy to add it, but haven't even begun work on that.
 
 
+### What it runs on
+
+It's been tested so far on
+
+- sbcl
+- ccl
+- ccl64
+
+
 ### How it works
 
 It's organised around a `neo4j-rest-server` object, which holds the details needed for connecting to a Neo4J server. Its initargs and defaults are:
+
 - :protocol - default = "http", but can be whatever Drakma will accept
 - :hostname - default = "localhost"
 - :port - default = 7474
@@ -30,6 +41,7 @@ It comes with a suitably basic test-suite, in the package `neo4cl-test`, which r
 
 
 ## Example usage:
+
 We'll assume it's a default installation of Neo4J, so it's listening on `http://localhost:7474`, and the username and password are both 'neo4j'.
 ```
 (defvar *server*
