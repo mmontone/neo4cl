@@ -2,13 +2,18 @@
 
 ## Short description:
 
-A very simple library that takes care of sending Cypher queries to a Neo4J server, and decoding the responses into something useful for processing in CL.
-Aims at compliance with Neo4J 3.0 via the HTTP API.
+From the [Neo4J website](http://neo4j.com/): "Neo4j is a highly scalable native graph database."
+
+Graph databases emphasise the relationships between things, and the information to be found there, in contrast to the relational focus on the things themselves. They are typically much more flexible in their definitions of things than RDBMSes, which fits well with Lisp's fluid approach to functionality.
+
+Neo4J is a very popular graph database that scales well. It implements a property graph, which means you can assign attributes to relationships as well as to nodes, and its query language (Cypher) is very expressive. It's an excellent transactional database which satisfies the ACID model, in contrast to something like RDF, which is better suited to data warehousing where responsiveness is traded off for more semantic richness.
+
+Neo4CL is very simple library that takes care of sending Cypher queries to a Neo4J server, and then decoding the responses into something useful for processing in CL. The queries and their responses take the form of alists. This library aims at compliance with Neo4J 3.0 via the HTTP API, based on the documentation in the [Neo4J developer manual](http://neo4j.com/docs/developer-manual/current/#http-api-index), and is intended as something to build applications on, more than for interactive use.
 
 
 ### What it does
 
-- sends queries to a Neo4J server, and returns its responses
+- transforms alists into queries, sends them to a Neo4J server, and returns its responses as alists
 - very basic error reporting
 
 
@@ -25,6 +30,17 @@ It's been tested so far on
 - sbcl
 - ccl
 - ccl64
+
+
+### Dependencies
+
+All available via Quicklisp:
+
+- drakma
+- cl-ppcre
+- cl-json
+- flexi-streams
+- cl-base64
 
 
 ### How it works
