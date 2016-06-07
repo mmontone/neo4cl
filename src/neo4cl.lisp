@@ -41,7 +41,7 @@
 (defun decode-neo4j-json (json)
   "Parse the JSON returned by Neo4J into a CL structure"
   ;; Neo4j sends a stream of octets. Convert this into a string.
-  (let ((json-string (babel:octets-to-string json)))
+  (let ((json-string (flexi-streams:octets-to-string json)))
     ;; If an empty string was returned, pass an empty string back.
     (if (equal json-string "")
         ""
