@@ -9,14 +9,5 @@
                #:flexi-streams ; Convert between strings and octets
                #:cl-base64  ; base64 encoding/decoding
                )
-  :components ((:file "neo4cl")))
-
-(defpackage #:neo4cl
-  (:use
-    #:cl)
-  (:export neo4j-rest-server
-           extract-data-from-get-request
-           change-password
-           neo4j-transaction
-           neo4j-transaction-error
-           ))
+  :components ((:file "package")
+               (:file "neo4cl")))

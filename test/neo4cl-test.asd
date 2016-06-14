@@ -5,8 +5,5 @@
   :description "Test suite for neo4cl"
   :depends-on (#:neo4cl
                #:fiveam)
-  :components ((:file "neo4cl-test")))
-
-(defpackage #:neo4cl-test
-  (:use #:cl)
-  (:export neo4cl))
+  :components ((:file "package")
+               (:file "neo4cl-test")))
