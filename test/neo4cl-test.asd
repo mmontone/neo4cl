@@ -8,6 +8,5 @@
   :components ((:file "neo4cl-test")))
 
 (defpackage #:neo4cl-test
-  (:use #:cl
-        #:neo4cl)
+  (:use #:cl)
   (:export neo4cl))
