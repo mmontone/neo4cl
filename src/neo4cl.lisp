@@ -67,6 +67,20 @@
           (assoc :row
                  (car data)))))))
 
+(defun extract-rows-from-get-request (response)
+  "Reach into the structure returned by a request that returns data,
+   and return only the actual content, in the form of a list of lists, each of
+   the latter of which represents a row."
+  (let ((data (cdr
+                (assoc :data
+                       (car
+                         ;; Just the results section
+                         (cdr (assoc :results response)))))))
+    (when data
+      (mapcar #'(lambda (datum)
+                  (cdr (assoc :row datum)))
+              data))))
+
 
 ;;; Deprecated methods
 
