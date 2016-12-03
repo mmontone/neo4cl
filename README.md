@@ -69,12 +69,16 @@ We'll assume it's a default installation of Neo4J, so it's listening on `http://
 
 ;; Create some bloke called Andre
 (neo4cl:neo4j-transaction
-  *server*
-  `((:STATEMENTS
-      ((:STATEMENT . "CREATE (n:Person { name : {name} }) RETURN n")
-       (:PARAMETERS .
-                    ((:properties .
-                                  ((:name . "Andre")))))))))
+ *server*
+ `((:STATEMENTS
+     ((:STATEMENT . "CREATE (n:Person { properties })")
+      (:PARAMETERS .
+       ((:properties . ((:name . "Andre")))))))))
+
+;; This should return the following:
+((:RESULTS ((:COLUMNS) (:DATA))) (:ERRORS))
+200
+"OK"
 
 ;; Is he there?
 (neo4cl:neo4j-transaction
@@ -82,9 +86,20 @@ We'll assume it's a default installation of Neo4J, so it's listening on `http://
   `((:STATEMENTS
       ((:STATEMENT . "MATCH (x:Person {name: 'Andre'}) RETURN x.name")))))
 
-;; We're bored; get rid of him
+;; The result should look so:
+((:RESULTS ((:COLUMNS "x.name") (:DATA ((:ROW "Andre") (:META NIL)))))
+ (:ERRORS))
+200
+"OK"
+
+;; We're bored with Andre; get rid of him
 (neo4cl:neo4j-transaction
   *server*
   `((:STATEMENTS
       ((:STATEMENT . "MATCH (x:Person {name: 'Andre'}) DELETE x")))))
+
+;; Finally, we should see this in response:
+((:RESULTS ((:COLUMNS) (:DATA))) (:ERRORS))
+200
+"OK"
 ```
