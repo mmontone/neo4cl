@@ -10,8 +10,12 @@
            change-password
            neo4j-transaction
            ;; Errors and sundry conditions
-           message ;; It helps to be able to get the message from a condition
            client-error
            client-notification
            transient-error
-           database-error))
+           database-error
+           ;; Error-related symbols
+           category
+           title
+           message
+           ))
