@@ -241,8 +241,4 @@
           (values response code reason)))
       ;;; Restart cases start here
       ;; The ultimate cop-out: FIDO
-      (return-nil () nil)
-      ;; Just tell us what went wrong
-      (report-error (e) (format nil "Error code: '~A - ~A' Error message: '~A'" (category e) (title e) (message e))))))
-
-
+      (return-nil () nil))))
