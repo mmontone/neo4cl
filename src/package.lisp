@@ -28,6 +28,7 @@
            client-notification
            transient-error
            database-error
+           service-error
            ;; Error-related symbols
            category
            title

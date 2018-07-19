@@ -199,61 +199,76 @@
    (message :initarg :message :reader message)))
 
 
+;; Conditions _not_ reported from Neo4J, like connection refused
+(define-condition service-error (error)
+  ((category :initarg :category :reader category)
+   (message :initarg message :reader message)))
+
+
 (defun neo4j-transaction (endpoint statements)
   "Execute one or more Cypher statements, wrapped in a transaction.
-   For now, we're simply issuing all statements in a batch and then committing, instead of building it up over several HTTP requests.
+   For now, we're simply issuing all statements in a batch and then committing,
+   instead of building it up over several HTTP requests.
    Sample input:
    '((:statements
        ((:statement . \"MATCH (n:User {properties} ) RETURN n\")
         (:parameters (:properties (:name . \"bob\"))))))
    If an error is detected, it will be signalled with whatever information was provided by Neo4J"
-  (multiple-value-bind (reply-content code headers uri stream ignore reason)
-    (drakma:http-request (concatenate 'string (base-url endpoint) "/db/data/transaction/commit")
-                         :method :post
-                         :accept "application/json; charset=UTF-8"
-                         :content-type "application/json"
-                         :additional-headers `(("authorization"
-                                                ,(concatenate 'string "Basic "
-                                                              (cl-base64:string-to-base64-string
-                                                                (format nil "~A:~A"
-                                                                        (dbuser endpoint)
-                                                                        (dbpasswd endpoint))))))
-                         :content (cl-json:encode-json-alist-to-string
-                                    statements))
-    ;; We only bound these values to make m-v-b work properly.
-    (declare (ignore headers)
-             (ignore uri)
-             (ignore stream)
-             (ignore ignore))
-    ;; Prepare to bind some common restart cases
-    (restart-case
-      ;; Process the response we got, returning either the content or an error
-      (let* ((response (decode-neo4j-json reply-content))
-             (errors (second (second response))))
-        ;; If an error was returned, throw it
-        (if errors
-          (let* ((error-code (cdr (assoc :code errors)))
-                 (error-components (cl-ppcre:split "\\." error-code))
-                 (classification (second error-components))
-                 (category (third error-components))
-                 (title (fourth error-components)))
-            (cond
-              ;; The Client sent a bad request - changing the request might yield a successful outcome.
-              ((equal classification "ClientError")
-               (error 'client-error :category category :title title :message (cdr (assoc :message errors))))
-              ;; There are notifications about the request sent by the client.
-              ((equal classification "ClientNotification")
-               (warn 'client-notification :category category :title title :message (cdr (assoc :message errors))))
-              ;; The database cannot service the request right now, retrying later might yield a successful outcome.
-              ((equal classification "TransientError")
-               (error 'transient-error :category category :title title :message (cdr (assoc :message errors))))
-              ;; The database failed to service the request.
-              ((equal classification "DatabaseError")
-               (error 'database-error :category category :title title :message (cdr (assoc :message errors))))
-              ;; Anything else.
-              (t (error "Unknown error occurred: ~A" error-code))))
-          ;; If everything's OK, return the values we received along with the status codes
-          (values response code reason)))
-      ;;; Restart cases start here
-      ;; The ultimate cop-out: FIDO
-      (return-nil () nil))))
+  (handler-case
+    (multiple-value-bind (reply-content code headers uri stream ignore reason)
+      (drakma:http-request (concatenate 'string (base-url endpoint) "/db/data/transaction/commit")
+                           :method :post
+                           :accept "application/json; charset=UTF-8"
+                           :content-type "application/json"
+                           :additional-headers `(("authorization"
+                                                  ,(concatenate 'string "Basic "
+                                                                (cl-base64:string-to-base64-string
+                                                                  (format nil "~A:~A"
+                                                                          (dbuser endpoint)
+                                                                          (dbpasswd endpoint))))))
+                           :content (cl-json:encode-json-alist-to-string
+                                      statements))
+      ;; We only bound these values to make m-v-b work properly.
+      (declare (ignore headers)
+               (ignore uri)
+               (ignore stream)
+               (ignore ignore))
+      ;; Prepare to bind some common restart cases
+      (restart-case
+        ;; Process the response we got, returning either the content or an error
+        (let* ((response (decode-neo4j-json reply-content))
+               (errors (second (second response))))
+          ;; If an error was returned, throw it
+          (if errors
+              (let* ((error-code (cdr (assoc :code errors)))
+                     (error-components (cl-ppcre:split "\\." error-code))
+                     (classification (second error-components))
+                     (category (third error-components))
+                     (title (fourth error-components)))
+                (cond
+                  ;; The Client sent a bad request - changing the request might yield a successful outcome.
+                  ((equal classification "ClientError")
+                   (error 'client-error :category category :title title :message (cdr (assoc :message errors))))
+                  ;; There are notifications about the request sent by the client.
+                  ((equal classification "ClientNotification")
+                   (warn 'client-notification :category category :title title :message (cdr (assoc :message errors))))
+                  ;; The database cannot service the request right now, retrying later might yield a successful outcome.
+                  ((equal classification "TransientError")
+                   (error 'transient-error :category category :title title :message (cdr (assoc :message errors))))
+                  ;; The database failed to service the request.
+                  ((equal classification "DatabaseError")
+                   (error 'database-error :category category :title title :message (cdr (assoc :message errors))))
+                  ;; Anything else.
+                  (t (error "Unknown error occurred: ~A" error-code))))
+              ;; If everything's OK, return the values we received along with the status codes
+              (values response code reason)))
+        ;;; Restart cases start here
+        ;; The ultimate cop-out: FIDO
+        (return-nil () nil)))
+    ;; The server is not listening on this socket
+    (USOCKET:CONNECTION-REFUSED-ERROR
+      (e)
+      (declare (ignore e))
+      (error 'service-error
+             :category "server"
+             :message "Connection refused"))))
