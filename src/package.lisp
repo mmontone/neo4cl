@@ -18,19 +18,22 @@
   (:export
     ;; Data structures
     neo4j-rest-server
+    dbpasswd
+    hostname
+    port
     ;; Functions
-           extract-data-from-get-request
-           extract-rows-from-get-request
-           change-password
-           neo4j-transaction
-           ;; Errors and sundry conditions
-           client-error
-           client-notification
-           transient-error
-           database-error
-           service-error
-           ;; Error-related symbols
-           category
-           title
-           message
-           ))
+    change-password
+    extract-data-from-get-request
+    extract-rows-from-get-request
+    get-user-status
+    neo4j-transaction
+    ;; Errors and sundry conditions
+    client-error
+    client-notification
+    transient-error
+    database-error
+    service-error
+    ;; Error-related symbols
+    category
+    title
+    message))
