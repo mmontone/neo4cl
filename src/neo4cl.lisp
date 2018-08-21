@@ -123,10 +123,35 @@
 
 (defun get-user-status (server)
   "Authenticate to the Neo4J server and confirm the status of the database user.
-   200/OK means the credentials are good.
-   401/Unauthorized means they're not.
-   The presence of (:PASSWORD--CHANGE--REQUIRED . T) in the body of the reply, well, you get the hint."
-  (neo4j-cypher-get-request server (concatenate 'string "/user/" (dbuser server))))
+  Return:
+  - t if authentication worked
+  - error 'client-error if the credentials are no good
+  - t and condition 'client-notification if the credentials have expired."
+  (multiple-value-bind (body return-code message headers)
+    (neo4j-cypher-get-request server (concatenate 'string "/user/" (dbuser server)))
+    (declare (ignore headers))
+    (cond
+      ;; Password needs changing
+      ((and (equal return-code 200)
+            (assoc :password--change--required body))
+       ;; Warn the client
+       (signal 'client-notification
+             :category "Security"
+             :title "CredentialsExpired"
+             :message "The credentials have expired and need to be updated.")
+       ;; Report success because they _did_ connect
+       t)
+      ;; 200/OK - we're all good
+      ((equal return-code 200)
+       t)
+      ;; Wrong password
+      ((equal return-code 401)
+       ;; Return a suitable error
+       (error 'client-error :category "Security"
+              :title "Unauthorized"
+              :message "The client is unauthorized due to authentication failure."))
+      (t
+        (error (format nil "Unexected response: ~A - ~A" return-code message))))))
 
 (defun neo4j-cypher-post-request (endpoint content &optional uri)
   "Store something in Neo4j via the legagy Cypher API.
