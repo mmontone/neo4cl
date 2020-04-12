@@ -118,9 +118,6 @@
              (ignore ignore))
     (values (decode-neo4j-json content) code reason headers)))
 
-(defmethod discover-rest-api ((endpoint neo4j-rest-server))
-  (neo4j-cypher-get-request endpoint "/db/data/"))
-
 (defun get-user-status (server)
   "Authenticate to the Neo4J server and confirm the status of the database user.
   Return:

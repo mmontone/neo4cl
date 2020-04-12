@@ -37,10 +37,6 @@
              (ignore headers))
     (fiveam:is (equal numeric 200))
     (fiveam:is (equal verbal "OK")))
-  ;; method: discover-rest-api
-  (let ((result (neo4cl::discover-rest-api *server*)))
-    (fiveam:is (listp result))
-    (fiveam:is (equalp (car result) '(:extensions))))
   ;; Store a node
   (fiveam:is (listp (neo4cl:neo4j-transaction
                       *server*
