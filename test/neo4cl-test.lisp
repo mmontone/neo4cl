@@ -32,16 +32,18 @@
   "Test the lowest-level methods for interacting with Neo4j"
   ;; Can we authenticate?
   (multiple-value-bind (body numeric verbal headers)
-    (neo4cl::get-user-status *server*)
+    (neo4cl:neo4j-transaction
+      *server*
+      '((:statements ((:statement . "MATCH (n) RETURN n")))))
     (declare (ignore body)
              (ignore headers))
-    (fiveam:is (equal numeric 200))
-    (fiveam:is (equal verbal "OK")))
+    (fiveam:is (equal 200 numeric))
+    (fiveam:is (equal "OK" verbal)))
   ;; Store a node
   (fiveam:is (listp (neo4cl:neo4j-transaction
                       *server*
                       `((:STATEMENTS
-                          ((:STATEMENT . "CREATE (n:Person { properties }) RETURN n")
+                          ((:STATEMENT . "CREATE (n:Person $properties) RETURN n")
                            (:PARAMETERS .
                                         ((:properties .
                                                       ((:name . "Andre")))))))))))
