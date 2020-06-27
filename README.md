@@ -24,13 +24,18 @@ Neo4CL is very simple library that sends Cypher queries to a Neo4J server, and d
 - any kind of object-graph mapping.
 
 
+## Compatibility
+
+### Neo4j versions
+
+4.1.0
+
+
 ### What it runs on
 
-It's been tested so far on
+It's developed and tested on SBCL.
 
-- sbcl
-- ccl
-- ccl64
+The maintainer hasn't had the time to test it on other implementations, but well-formatted pull-requests are always welcome.
 
 
 ### Dependencies
