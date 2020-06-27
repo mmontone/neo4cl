@@ -154,12 +154,7 @@
                            :method :post
                            :accept "application/json; charset=UTF-8"
                            :content-type "application/json"
-                           :additional-headers `(("authorization"
-                                                  ,(concatenate 'string "Basic "
-                                                                (cl-base64:string-to-base64-string
-                                                                  (format nil "~A:~A"
-                                                                          (dbuser endpoint)
-                                                                          (dbpasswd endpoint))))))
+                           :basic-authorization `(,(dbuser endpoint) ,(dbpasswd endpoint))
                            :content (cl-json:encode-json-alist-to-string
                                       statements))
       ;; We only bound these values to make m-v-b work properly.
