@@ -18,6 +18,7 @@
   (:export
     ;; Data structures
     neo4j-rest-server
+    dbname
     dbpasswd
     hostname
     port

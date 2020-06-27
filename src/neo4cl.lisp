@@ -29,6 +29,10 @@
              :initform "localhost"
              :reader hostname
              :documentation "String; the hostname to use when connecting to the Neo4J server. Defaults to 'localhost'.")
+   (dbname :initarg :dbname
+           :initform "neo4j"
+           :reader dbname
+           :documentation "String; the name of the database to query. Defaults to 'neo4j'.")
    (port :initarg :port
          :initform 7474
          :reader port
@@ -146,7 +150,7 @@
    If an error is detected, it will be signalled with whatever information was provided by Neo4J"
   (handler-case
     (multiple-value-bind (reply-content code headers uri stream ignore reason)
-      (drakma:http-request (concatenate 'string (base-url endpoint) "/db/data/transaction/commit")
+      (drakma:http-request (concatenate 'string (base-url endpoint) "/db/" (dbname endpoint) "/tx/commit")
                            :method :post
                            :accept "application/json; charset=UTF-8"
                            :content-type "application/json"
