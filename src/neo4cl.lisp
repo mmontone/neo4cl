@@ -57,10 +57,11 @@
 
 ;;; Utilities
 
-(defun decode-neo4j-json (json)
+(defun decode-neo4j-json (json &key debug)
   "Parse the JSON returned by Neo4J into a CL structure"
   ;; Neo4j sends a stream of octets. Convert this into a string.
   (let ((json-string (flexi-streams:octets-to-string json)))
+    (when debug (format t "decode-neo4j-json decoding string '~A'" json-string))
     ;; If an empty string was returned, pass an empty string back.
     (if (equal json-string "")
         ""
@@ -139,7 +140,7 @@
    (message :initarg message :reader message)))
 
 
-(defun neo4j-transaction (endpoint statements)
+(defun neo4j-transaction (endpoint statements &key debug)
   "Execute one or more Cypher statements, wrapped in a transaction.
    For now, we're simply issuing all statements in a batch and then committing,
    instead of building it up over several HTTP requests.
@@ -150,13 +151,14 @@
    If an error is detected, it will be signalled with whatever information was provided by Neo4J"
   (handler-case
     (multiple-value-bind (reply-content code headers uri stream ignore reason)
-      (drakma:http-request (concatenate 'string (base-url endpoint) "/db/" (dbname endpoint) "/tx/commit")
-                           :method :post
-                           :accept "application/json; charset=UTF-8"
-                           :content-type "application/json"
-                           :basic-authorization `(,(dbuser endpoint) ,(dbpasswd endpoint))
-                           :content (cl-json:encode-json-alist-to-string
-                                      statements))
+      (let ((content (cl-json:encode-json-alist-to-string statements)))
+        (when debug (format t "neo4j-transaction preparing to apply content '~A'" content))
+        (drakma:http-request (concatenate 'string (base-url endpoint) "/db/" (dbname endpoint) "/tx/commit")
+                             :method :post
+                             :accept "application/json; charset=UTF-8"
+                             :content-type "application/json"
+                             :basic-authorization `(,(dbuser endpoint) ,(dbpasswd endpoint))
+                             :content content))
       ;; We only bound these values to make m-v-b work properly.
       (declare (ignore headers)
                (ignore uri)
@@ -167,6 +169,7 @@
         ;; Process the response we got, returning either the content or an error
         (let* ((response (decode-neo4j-json reply-content))
                (errors (second (second response))))
+          (when debug (format t "neo4j-transaction received response '~A' after decoding" response))
           ;; If an error was returned, throw it
           (if errors
               (let* ((error-code (cdr (assoc :code errors)))
