@@ -28,6 +28,16 @@
 (fiveam:in-suite neo4cl)
 
 (fiveam:test
+  character-encoding
+  "Regression tests for non-ASCII character-encoding problems."
+  ;; The original
+  (let ((test-string-1 "Röver Edwárd Petrusky the fourth"))
+    (fiveam:is (equal
+                 test-string-1
+                 (cl-json:decode-json-from-string
+                   (cl-json:encode-json-to-string test-string-1))))))
+
+(fiveam:test
   neo4j-base-api
   "Test the lowest-level methods for interacting with Neo4j"
   ;; Can we authenticate?
