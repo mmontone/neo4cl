@@ -169,7 +169,7 @@
         ;; Process the response we got, returning either the content or an error
         (let* ((response (decode-neo4j-json reply-content))
                (errors (second (second response))))
-          (when debug (format t "neo4j-transaction received response '~A' after decoding" response))
+          (when debug (format t "~&neo4j-transaction received response '~A' after decoding" response))
           ;; If an error was returned, throw it
           (if errors
               (let* ((error-code (cdr (assoc :code errors)))
