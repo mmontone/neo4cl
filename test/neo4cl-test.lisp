@@ -24,8 +24,8 @@
 
 
 ;;;; The actual test suite
-(fiveam:def-suite neo4cl)
-(fiveam:in-suite neo4cl)
+(fiveam:def-suite main)
+(fiveam:in-suite main)
 
 (fiveam:test
   character-encoding
