@@ -57,7 +57,7 @@
 
 ;;; Utilities
 
-(defun decode-neo4j-json (json &key debug)
+(defun decode-neo4j-json (json)
   "Parse the JSON returned by Neo4J into a CL structure"
   ;; Neo4j sends a stream of octets. Convert this into a string.
   (let ((json-string (flexi-streams:octets-to-string json :external-format :UTF-8)))
@@ -140,7 +140,7 @@
    (message :initarg message :reader message)))
 
 
-(defun neo4j-transaction (endpoint statements &key debug)
+(defun neo4j-transaction (endpoint statements)
   "Execute one or more Cypher statements, wrapped in a transaction.
    For now, we're simply issuing all statements in a batch and then committing,
    instead of building it up over several HTTP requests.
