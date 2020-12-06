@@ -24,4 +24,5 @@
                #:cl-base64  ; base64 encoding/decoding
                )
   :components ((:file "package")
+               (:file "logging")
                (:file "neo4cl")))
