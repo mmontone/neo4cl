@@ -19,7 +19,7 @@
     :debug 0))
 
 ;; Set the threshold logging level
-(defparameter *loglevel* :debug)
+(defparameter *loglevel* :warn)
 
 (defparameter *log-stream*
   (make-synonym-stream 'cl:*standard-output*))
