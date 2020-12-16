@@ -61,7 +61,7 @@
   "Parse the JSON returned by Neo4J into a CL structure"
   ;; Neo4j sends a stream of octets. Convert this into a string.
   (let ((json-string (flexi-streams:octets-to-string json :external-format :UTF-8)))
-    (log-message :debug (format t "decode-neo4j-json decoding string '~A'" json-string))
+    (log-message :debug (format nil "decode-neo4j-json decoding string '~A'" json-string))
     ;; If an empty string was returned, pass an empty string back.
     (if (equal json-string "")
         ""
@@ -152,7 +152,7 @@
   (handler-case
     (multiple-value-bind (reply-content code headers uri stream ignore reason)
       (let ((content (cl-json:encode-json-alist-to-string statements)))
-        (log-message :debug (format t "neo4j-transaction preparing to apply content '~A'" content))
+        (log-message :debug (format nil "neo4j-transaction preparing to apply content '~A'" content))
         (drakma:http-request (concatenate 'string (base-url endpoint) "/db/" (dbname endpoint) "/tx/commit")
                              :method :post
                              :accept "application/json; charset=UTF-8"
@@ -171,7 +171,7 @@
                (errors (second (second response))))
           (log-message
             :debug
-            (format t "~&neo4j-transaction received response '~A' after decoding" response))
+            (format nil "~&neo4j-transaction received response '~A' after decoding" response))
           ;; If an error was returned, throw it
           (if errors
               (let* ((error-code (cdr (assoc :code errors)))
