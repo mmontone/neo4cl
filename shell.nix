@@ -19,7 +19,7 @@ stdenv.mkDerivation rec {
         paths = buildInputs;
     };
 
-    LD_LIBRARY_PATH = stdenv.lib.makeLibraryPath [
+    LD_LIBRARY_PATH = lib.makeLibraryPath [
         pkgs.openssl
         pkgs.libyaml
     ];
