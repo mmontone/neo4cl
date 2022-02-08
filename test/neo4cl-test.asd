@@ -1,4 +1,4 @@
-;   Copyright 2017 James Fleming <james@electronic-quill.net>
+;   Copyright 2017-2022 James Fleming <james@electronic-quill.net>
 ;
 ;   Licensed under the Apache License, Version 2.0 (the "License");
 ;   you may not use this file except in compliance with the License.
@@ -20,4 +20,5 @@
   :depends-on (#:neo4cl
                #:fiveam)
   :components ((:file "package")
-               (:file "neo4cl-test")))
+               (:file "main")
+               (:file "http")))

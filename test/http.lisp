@@ -13,19 +13,23 @@
 ;   limitations under the License.
 
 
+;;;; Test suite for HTTP driver
+
+
 (in-package #:neo4cl-test)
 
-(defparameter *server*
-  ;; We don't need to specify hostname, port or protocol, since in this
-  ;; case we're using the defaults.
-  ;; Should probably test each of the permutations, though.
-  (make-instance 'neo4cl:neo4j-rest-server
-                 :dbpasswd "wallaby"))
+(declaim (optimize (compilation-speed 0)
+                   (speed 2)
+                   (safety 3)
+                   (debug 3)))
 
 
-;;;; The actual test suite
-(fiveam:def-suite main)
-(fiveam:in-suite main)
+(fiveam:def-suite http
+                  :description "Tests for the HTTP driver."
+                  :in main)
+
+(fiveam:in-suite http)
+
 
 (fiveam:test
   character-encoding
@@ -43,7 +47,7 @@
   ;; Can we authenticate?
   (multiple-value-bind (body numeric verbal headers)
     (neo4cl:neo4j-transaction
-      *server*
+      *http-server*
       '((:statements ((:statement . "MATCH (n) RETURN n")))))
     (declare (ignore body)
              (ignore headers))
@@ -51,7 +55,7 @@
     (fiveam:is (equal "OK" verbal)))
   ;; Store a node
   (fiveam:is (listp (neo4cl:neo4j-transaction
-                      *server*
+                      *http-server*
                       `((:STATEMENTS
                           ((:STATEMENT . "CREATE (n:Person $properties) RETURN n")
                            (:PARAMETERS .
@@ -62,12 +66,12 @@
                "Andre"
                (neo4cl:extract-data-from-get-request
                  (neo4cl:neo4j-transaction
-                   *server*
+                   *http-server*
                    '((:STATEMENTS
                        ((:STATEMENT . "MATCH (x:Person {name: 'Andre'}) RETURN x.name"))))))))
   ;; Delete a node
   (let ((result (neo4cl:neo4j-transaction
-                  *server*
+                  *http-server*
                   `((:STATEMENTS
                       ((:STATEMENT . "MATCH (x:Person {name: 'Andre'}) DELETE x")))))))
     (fiveam:is (listp result))

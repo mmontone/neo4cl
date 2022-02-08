@@ -14,4 +14,5 @@
 
 (defpackage #:neo4cl-test
   (:use #:cl)
-  (:export main))
+  (:export main
+           http))

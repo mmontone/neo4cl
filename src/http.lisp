@@ -13,7 +13,9 @@
 ;   limitations under the License.
 
 
-;;;; Classes and methods specific to neo4j
+;;;; HTTP driver for Neo4j
+;;;;
+;;;; Warning: this thing is primitive. It works, but lacks refinements such as escaping control characters.
 
 (in-package #:neo4cl)
 
