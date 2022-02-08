@@ -30,6 +30,20 @@
   (make-instance 'neo4cl:neo4j-rest-server
                  :dbpasswd "wallaby"))
 
+(defparameter *bolt-auth-basic*
+  (make-instance 'neo4cl:bolt-auth-basic
+                 :username "neo4j"
+                 :password "wallaby"))
+
+(defparameter *bolt-auth-none*
+  (make-instance 'neo4cl:bolt-auth-none
+                 :username "neo4j"))
+
+(defparameter *bolt-server*
+  (make-instance 'neo4cl:bolt-server
+                 :hostname "192.0.2.1"
+                 :auth-token *bolt-auth-basic*))
+
 
 ;;;; The parent test suite
 (fiveam:def-suite main)

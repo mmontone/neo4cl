@@ -13,6 +13,9 @@
 ;   limitations under the License.
 
 (defpackage #:neo4cl-test
-  (:use #:cl)
+  (:use #:cl
+        #:neo4cl)
   (:export main
-           http))
+           http
+           bolt
+           packstream))

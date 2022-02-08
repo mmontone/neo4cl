@@ -16,6 +16,44 @@
   (:use
     #:cl)
   (:export
+    ;;; Bolt client
+    ;; Classes
+    bolt-server
+    bolt-auth-basic
+    bolt-auth-none
+    neo4j-version
+    neo4j-4-3-9
+    ;; bolt-session class and its methods
+    bolt-session
+    connect
+    connection
+    connection-id
+    bolt-version
+    neo4j-version
+    establish-bolt-session
+    bolt-transaction-autocommit
+    disconnect
+    ;; bolt-protocol class, subclasses and methods
+    bolt-protocol
+    bolt-protocol-4-3
+    major-version
+    minor-version
+    ;; Structure types and their methods
+    node
+    node-id
+    node-labels
+    node-properties
+    relationship
+    relationship-id
+    start-node-id
+    end-node-id
+    relationship-type
+    relationship-properties
+    ;; Conditions
+    bolt-error
+    packstream-error
+    ;;;
+    ;;; HTTP client
     ;; Data structures
     neo4j-rest-server
     dbname

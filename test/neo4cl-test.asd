@@ -18,7 +18,10 @@
   :author "James Fleming <james@electronic-quill.net>"
   :description "Test suite for neo4cl"
   :depends-on (#:neo4cl
-               #:fiveam)
+               #:fiveam
+               #:flexi-streams)
   :components ((:file "package")
                (:file "main")
-               (:file "http")))
+               (:file "http")
+               (:file "bolt")
+               (:file "packstream")))

@@ -103,45 +103,6 @@
                   (cdr (assoc :row datum)))
               data))))
 
-
-;; Classes of Neo4J status codes
-;; Based on the documentation at http://neo4j.com/docs/developer-manual/current/#status-codes
-
-;; The Client sent a bad request - changing the request might yield a successful outcome.
-;; Effect on transaction: rollback
-(define-condition client-error (error)
-  ((category :initarg :category :reader category)
-   (title :initarg :title :reader title)
-   (message :initarg :message :reader message)))
-
-;; There are notifications about the request sent by the client.
-;; Effect on transaction: none
-(define-condition client-notification ()
-  ((category :initarg :category :reader category)
-   (title :initarg :title :reader title)
-   (message :initarg :message :reader message)))
-
-;; The database cannot service the request right now, retrying later might yield a successful outcome.
-;; Effect on transaction: rollback
-(define-condition transient-error (error)
-  ((category :initarg :category :reader category)
-   (title :initarg :title :reader title)
-   (message :initarg :message :reader message)))
-
-;; The database failed to service the request.
-;; Effect on transaction: rollback
-(define-condition database-error (error)
-  ((category :initarg :category :reader category)
-   (title :initarg :title :reader title)
-   (message :initarg :message :reader message)))
-
-
-;; Conditions _not_ reported from Neo4J, like connection refused
-(define-condition service-error (error)
-  ((category :initarg :category :reader category)
-   (message :initarg message :reader message)))
-
-
 (defun neo4j-transaction (endpoint statements)
   "Execute one or more Cypher statements, wrapped in a transaction.
    For now, we're simply issuing all statements in a batch and then committing,

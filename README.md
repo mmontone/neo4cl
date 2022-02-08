@@ -1,6 +1,6 @@
 # neo4cl - a CL library for interacting with Neo4J
 
-## Short description:
+# Short description:
 
 From the [Neo4J website](http://neo4j.com/): "Neo4j is a highly scalable native graph database."
 
@@ -8,107 +8,142 @@ Graph databases emphasise the relationships between things, and the information 
 
 Neo4J is a very popular graph database that scales well. It implements a property graph, which means you can assign attributes to relationships as well as to nodes, and its query language (Cypher) is very expressive. It's an excellent transactional database which satisfies the ACID model, in contrast to something like RDF, which is better suited to data warehousing where responsiveness is traded off for more semantic richness.
 
-Neo4CL is very simple library that sends Cypher queries to a Neo4J server, and decodes the responses into something useful for processing in CL. The queries and their responses take the form of alists. This library aims at compliance with Neo4J 3.0 via the HTTP API, based on the documentation in the [Neo4J developer manual](http://neo4j.com/docs/developer-manual/current/#http-api-index), and is intended as something to build applications on, more than for interactive use.
+Neo4CL is very simple library that sends Cypher queries to a Neo4J server, and decodes the responses into something useful for processing in CL. The queries and their responses take the form of alists. This library aims at compliance with Neo4J 4.3.9 via both the HTTP API and the Bolt protocol, based on the documentation in the [Neo4J developer manual](http://neo4j.com/docs/developer-manual/current/#http-api-index), and is intended as something to build applications on, more than for interactive use.
+
+The HTTP API is deprecated, and will be dropped from this codebase altogether as soon as the Bolt-client implementation matches it in maturity, unless somebody actually tells me they're using it. To contact me, please email me: `james` at `sysc.at`.
 
 
-### What it does
+## Status
 
-- transforms alists into queries, sends them to a Neo4J server, and returns its responses as alists
-- very basic error reporting
+### Bolt client
+
+Beta: it works, but not all functionality is implemented yet.
+
+- Successfully completes basic CREATE, MATCH/RETURN and DELETE queries.
+- Packstream implementation is *not* complete.
+- Lisp -> Packstream implementation:
+    - `nil` -> `Null`
+    - `Boolean`
+    - `string` -> `String`
+    - 8-bit integers -> `Integer`
+        - Longer integers will be supported in future.
+    - `list` -> `List`
+    - `hash-table` -> `Dictionary`
+- Packstream -> Lisp implementation:
+    - `Null` -> `nil`
+    - `Boolean` -> `t` and `nil`
+    - `TINYINT` -> `integer`
+    - `String` -> `string`
+    - `List` -> `list`
+    - `Dictionary` -> `alist`
+        - `Dictionary` is defined to potentially return multiple values for the same key; alists support this, but hash-tables don't.
+    - Structures are parsed into CL classes, whose symbols are exported from the package:
+        - `Node` -> `node`
+        - `Relationship` -> `relationship`
+- Packstream parsing _not_ implemented:
+    - `Float`
+    - `Bytes`
+    - `Structure` types other than `Node` and `Relationship`
+    - Negative integers are not implemented for values greater than 8 bits.
 
 
-### What it doesn't do
+### HTTP client
 
-- anything involving Cypher itself. It forwards the query string, and assumes the server will know what to do with it.
-- the BOLT protocol. This may be added in the future.
-- any kind of object-graph mapping.
+Beta, deprecated.
 
-
-## Compatibility
-
-### Neo4j versions
-
-4.1.0
+- Working, to at least a basic degree.
+- Not compatible with Neo4j 4.4.
+    - This will not be fixed, because it's being replaced by the Bolt client.
 
 
-### What it runs on
+## What it does
 
-It's developed and tested on SBCL.
-
-The maintainer hasn't had the time to test it on other implementations, but well-formatted pull-requests are always welcome.
+- Execute basic queries as autocommit transactions, parsing the results into suitable CL types, including various classes..
 
 
-### Dependencies
+## What it doesn't do
+
+- TLS/SSL connections (yet).
+- Anything involving Cypher itself. It forwards the query string, and assumes the server will know what to do with it.
+- Any kind of object-graph mapping.
+
+
+# Compatibility
+
+## Neo4j versions
+
+### Bolt client
+
+4.3.9
+
+
+### HTTP client
+
+4.1.0 -> 4.3.9
+
+
+## Lisp compatibility
+
+SBCL only.
+
+Once it's fully functional for Neo4j 4.3 and 4.4, support may be added for other implementations, if any interest is shown.
+
+
+## Dependencies
+
+
+### Bolt client
 
 All available via Quicklisp:
 
-- drakma
-- cl-ppcre
-- cl-json
-- flexi-streams
-- cl-base64
+- `fiveam` for testing
+- `trivial-utf-8`
+- `usocket`
 
 
-### How it works
+### HTTP client
 
-It's organised around a `neo4j-rest-server` object, which holds the details needed for connecting to a Neo4J server. Its initargs and defaults are:
+All available via Quicklisp:
 
-- :protocol - default = "http", but can be whatever Drakma will accept
-- :hostname - default = "localhost"
-- :port - default = 7474
-- :dbuser - default = "neo4j"
-- :dbpasswd - default = "neo4j"
-
-It comes with a basic test-suite, in the package `neo4cl-test`, which requires the FiveAM framework.
+- `cl-base64`
+- `cl-json`
+- `cl-ppcre`
+- `drakma`
+- `flexi-streams`
 
 
-## Example usage:
+# Bolt client: how it works
 
-We'll assume it's a default installation of Neo4J, so it's listening on `http://localhost:7474`, and the username and password are both 'neo4j'.
-```
-(defvar *server*
-  (make-instance 'neo4cl:neo4j-rest-server))
+Clients mostly interact with a `bolt-session` object, which contains objects representing the `usocket` connection stream, the version of the Bolt protocol in use for this session, and the version of the Neo4j database that it's connected to.
 
-;; First, we change the password.
-;; It changes the password stored in *server* for you, so it continues to "just work."
-(neo4cl:change-password *server* "foobar")
 
-;; Create some bloke called Andre
-(neo4cl:neo4j-transaction
- *server*
- `((:STATEMENTS
-     ((:STATEMENT . "CREATE (n:Person { properties })")
-      (:PARAMETERS .
-       ((:properties . ((:name . "Andre")))))))))
+## Example usage
 
-;; This should return the following:
-((:RESULTS ((:COLUMNS) (:DATA))) (:ERRORS))
-200
-"OK"
+Fetch the label and `name` property of all nodes in the database:
 
-;; Is he there?
-(neo4cl:neo4j-transaction
-  *server*
-  `((:STATEMENTS
-      ((:STATEMENT . "MATCH (x:Person {name: 'Andre'}) RETURN x.name")))))
+    (defparameter *bolt-server*
+      (make-instance 'neo4cl::bolt-server
+                     :hostname "192.0.2.1"))
+    
+    (defparameter *bolt-auth-basic*
+      (make-instance 'neo4cl::bolt-auth-basic
+                     :username "neo4j"
+                     :password "wallaby"))
+    
+    
+    (let ((session (neo4cl:establish-bolt-session *bolt-server* *bolt-auth-basic*)))
+      (neo4cl:bolt-transaction-autocommit
+        session
+        "MATCH (p) RETURN p.name AS name, LABELS(p) AS label")
+      (neo4cl:disconnect session))
 
-;; The result should look so:
-((:RESULTS ((:COLUMNS "x.name") (:DATA ((:ROW "Andre") (:META NIL)))))
- (:ERRORS))
-200
-"OK"
 
-;; We're bored with Andre; get rid of him
-(neo4cl:neo4j-transaction
-  *server*
-  `((:STATEMENTS
-      ((:STATEMENT . "MATCH (x:Person {name: 'Andre'}) DELETE x")))))
+## Notes about Packstream encoding
 
-;; Finally, we should see this in response:
-((:RESULTS ((:COLUMNS) (:DATA))) (:ERRORS))
-200
-"OK"
-```
+[Packstream](https://7687.org/packstream/packstream-specification-1.html) is the message-encoding format used by the Bolt protocol.
+
+It has explicit encoding for Boolean and Null values, but Common Lisp does not; this makes it difficult for the encoder to figure out whether the value for a hash-table entry is null, an empty list, or a boolean False. To resolve this, `neo4cl` recognises the values `:true`, `:false` and `:null`, and encodes them accordingly.
+
 
 ## Error/condition handling
 

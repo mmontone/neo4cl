@@ -17,12 +17,19 @@
   :license "MIT license"
   :author "James Fleming <james@electronic-quill.net>"
   :description "Basic library for interacting with Neo4J"
-  :depends-on (#:cl-ppcre ; Check UUID formatting and identify error strings
-               #:drakma  ; Send requests to the neo4j server
-               #:cl-json ; Encode/decode json requests
-               #:flexi-streams ; Convert between strings and octets
-               #:cl-base64  ; base64 encoding/decoding
+  :depends-on (#:cl-base64      ; base64 encoding/decoding
+               #:cl-ppcre       ; Check UUID formatting and identify error strings
+               #:cl-json        ; Encode/decode json requests
+               #:drakma         ; Send requests to the neo4j server
+               #:flexi-streams  ; Convert between strings and octets
+               #:usocket        ; Universal sockets library
+               #:trivial-utf-8  ; Efficient UTF-8 serialisation/deserialisation
                )
   :components ((:file "package")
                (:file "logging")
-               (:file "http")))
+               (:file "conditions")
+               (:file "http")
+               (:file "packstream-structures")
+               (:file "packstream-encoding")
+               (:file "packstream-decoding")
+               (:file "bolt")))
