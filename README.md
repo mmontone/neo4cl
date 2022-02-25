@@ -17,10 +17,14 @@ The HTTP API is deprecated, and will be dropped from this codebase altogether as
 
 ### Bolt client
 
-Beta: it works, but not all functionality is implemented yet.
+Alpha: it works, but not all functionality is implemented yet, and it hasn't been fully production-tested.
 
-- Successfully completes basic CREATE, MATCH/RETURN and DELETE queries.
-- Packstream implementation is *not* complete.
+Working:
+
+- Basic authentication.
+- Autocommit transactions.
+- Multi-chunk message parsing.
+    - I.e, it will reassemble multi-chunk messages _received from_ the server in response to queries.
 - Lisp -> Packstream implementation:
     - `nil` -> `Null`
     - `Boolean`
@@ -40,11 +44,25 @@ Beta: it works, but not all functionality is implemented yet.
     - Structures are parsed into CL classes, whose symbols are exported from the package:
         - `Node` -> `node`
         - `Relationship` -> `relationship`
+
+
+Not yet implemented:
+
+- Explicit transactions.
+- Routing.
+- Multi-chunk encoding of large client messages.
 - Packstream parsing _not_ implemented:
     - `Float`
     - `Bytes`
     - `Structure` types other than `Node` and `Relationship`
     - Negative integers are not implemented for values greater than 8 bits.
+- TLS/SSL connections (yet).
+
+
+Not implemented, and not on the roadmap:
+
+- Anything involving Cypher itself. It forwards the query string, and assumes the server will know what to do with it.
+- Any kind of object-graph mapping.
 
 
 ### HTTP client
@@ -63,9 +81,6 @@ Beta, deprecated.
 
 ## What it doesn't do
 
-- TLS/SSL connections (yet).
-- Anything involving Cypher itself. It forwards the query string, and assumes the server will know what to do with it.
-- Any kind of object-graph mapping.
 
 
 # Compatibility
