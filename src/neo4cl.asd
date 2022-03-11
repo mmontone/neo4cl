@@ -14,7 +14,7 @@
 
 (asdf:defsystem #:neo4cl
   :serial t
-  :license "MIT license"
+  :license "Apache license 2.0"
   :author "James Fleming <james@electronic-quill.net>"
   :description "Basic library for interacting with Neo4J"
   :depends-on (#:cl-base64      ; base64 encoding/decoding
