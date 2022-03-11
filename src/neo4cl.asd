@@ -29,6 +29,7 @@
                (:file "logging")
                (:file "conditions")
                (:file "http")
+               (:file "binary-file")
                (:file "packstream-structures")
                (:file "packstream-encoding")
                (:file "packstream-decoding")

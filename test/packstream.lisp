@@ -49,7 +49,7 @@
 (fiveam:test
   encode-integer
   "Serialise integer values."
-  (fiveam:signals (error "Integer out of range.") (neo4cl::encode-integer -17))
+  (fiveam:signals (error "Integer out of range.") (neo4cl::encode-integer -9223372036854775809))
   (fiveam:signals (error "Integer out of range.") (neo4cl::encode-integer 9223372036854775808))
   ;; TinyInt
   (fiveam:is (equalp (vector #x00) (neo4cl::encode-integer 0)))
@@ -61,7 +61,10 @@
   (fiveam:is (equalp (vector #xca #x00 #x00 #xfa #x00) (neo4cl::encode-integer 64000)))
   ;; INT_32
   (fiveam:is (equalp (vector #xcb #x7f #xff #xff #xff #xff #xff #xff #xff)
-                     (neo4cl::encode-integer 9223372036854775807))))
+                     (neo4cl::encode-integer 9223372036854775807)))
+  ;; INT_64
+  (fiveam:is (equalp (vector #xcb #x80 #x00 #x00 #x00 #x00 #x00 #x00 #x00)
+                     (neo4cl::encode-integer -9223372036854775808))))
 
 (fiveam:test
   encode-list
@@ -180,6 +183,11 @@
     (fiveam:is (equal 1 len))
     (fiveam:is (equal 1 hdrlen)))
   (multiple-value-bind (result len hdrlen)
+    (neo4cl::decode-int (vector #xc8 #xd6) 0)
+    (fiveam:is (equal -42 result))
+    (fiveam:is (equal 1 len))
+    (fiveam:is (equal 1 hdrlen)))
+  (multiple-value-bind (result len hdrlen)
     (neo4cl::decode-int (vector #xc9 #x7b #x2c) 0)
     (fiveam:is (equal 31532 result))
     (fiveam:is (equal 2 len))
@@ -201,6 +209,13 @@
                                 #x7f #xff #xff #xff
                                 #xff #xff #xff #xff) 0)
     (fiveam:is (equal 9223372036854775807 result))
+    (fiveam:is (equal 8 len))
+    (fiveam:is (equal 1 hdrlen)))
+  (multiple-value-bind (result len hdrlen)
+    (neo4cl::decode-int (vector #xcb
+                                #x80 #x00 #x00 #x00
+                                #x00 #x00 #x00 #x00) 0)
+    (fiveam:is (equal -9223372036854775808 result))
     (fiveam:is (equal 8 len))
     (fiveam:is (equal 1 hdrlen))))
 

@@ -149,16 +149,58 @@
                         session
                         "MATCH (p:foo) RETURN p.name AS name, LABELS(p) AS label")))
     (neo4cl:bolt-transaction-autocommit session "MATCH (p:foo) DELETE p")
-    ;; Tiny int
-    (neo4cl:bolt-transaction-autocommit session "CREATE (:foo {name: 123})")
+    ;; String - parameterised
+    (neo4cl:bolt-transaction-autocommit session "CREATE (:foo {name: $name})"
+                                        :parameters '(("name" . "bar")))
+    (fiveam:is (equal '((("name" . "bar") ("label" . "foo")))
+                      (neo4cl:bolt-transaction-autocommit
+                        session
+                        "MATCH (p:foo) RETURN p.name AS name, LABELS(p) AS label")))
+    (neo4cl:bolt-transaction-autocommit session "MATCH (p:foo) DELETE p")
+    ;; Positive tiny int
+    (neo4cl:bolt-transaction-autocommit session "CREATE (:foo {name: $name})"
+                                        :parameters '(("name" . 123)))
     (fiveam:is (equal '((("name" . 123) ("label" . "foo")))
                       (neo4cl:bolt-transaction-autocommit
                         session
                         "MATCH (p:foo) RETURN p.name AS name, LABELS(p) AS label")))
     (neo4cl:bolt-transaction-autocommit session "MATCH (p:foo) DELETE p")
+    ;; Negative tiny int
+    (neo4cl:bolt-transaction-autocommit session "CREATE (:foo {name: $name})"
+                                        :parameters '(("name" . -123)))
+    (fiveam:is (equal '((("name" . -123) ("label" . "foo")))
+                      (neo4cl:bolt-transaction-autocommit
+                        session
+                        "MATCH (p:foo) RETURN p.name AS name, LABELS(p) AS label")))
+    (neo4cl:bolt-transaction-autocommit session "MATCH (p:foo) DELETE p")
     ;; Positive 16-bit int
-    (neo4cl:bolt-transaction-autocommit session "CREATE (:foo {name: 1234})")
+    (neo4cl:bolt-transaction-autocommit session "CREATE (:foo {name: $name})"
+                                        :parameters '(("name" . 1234)))
     (fiveam:is (equal '((("name" . 1234) ("label" . "foo")))
+                      (neo4cl:bolt-transaction-autocommit
+                        session
+                        "MATCH (p:foo) RETURN p.name AS name, LABELS(p) AS label")))
+    (neo4cl:bolt-transaction-autocommit session "MATCH (p:foo) DELETE p")
+    ;; Negative 16-bit int
+    (neo4cl:bolt-transaction-autocommit session "CREATE (:foo {name: $name})"
+                                        :parameters '(("name" . -4268)))
+    (fiveam:is (equal '((("name" . -4268) ("label" . "foo")))
+                      (neo4cl:bolt-transaction-autocommit
+                        session
+                        "MATCH (p:foo) RETURN p.name AS name, LABELS(p) AS label")))
+    (neo4cl:bolt-transaction-autocommit session "MATCH (p:foo) DELETE p")
+    ;; Positive 64-bit int
+    (neo4cl:bolt-transaction-autocommit session "CREATE (:foo {name: $name})"
+                                        :parameters '(("name" . 8875584498032208147 )))
+    (fiveam:is (equal '((("name" . 8875584498032208147) ("label" . "foo")))
+                      (neo4cl:bolt-transaction-autocommit
+                        session
+                        "MATCH (p:foo) RETURN p.name AS name, LABELS(p) AS label")))
+    (neo4cl:bolt-transaction-autocommit session "MATCH (p:foo) DELETE p")
+    ;; Negative 64-bit int
+    (neo4cl:bolt-transaction-autocommit session "CREATE (:foo {name: $name})"
+                                        :parameters '(("name" . -9223372036854775808)))
+    (fiveam:is (equal '((("name" . -9223372036854775808) ("label" . "foo")))
                       (neo4cl:bolt-transaction-autocommit
                         session
                         "MATCH (p:foo) RETURN p.name AS name, LABELS(p) AS label")))

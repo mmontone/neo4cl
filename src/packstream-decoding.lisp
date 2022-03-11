@@ -142,6 +142,25 @@
       (t (error 'packstream-error :category "marker"
                 :message (format nil "Invalid length marker '#x~2,'0X" marker))))))
 
+(defun read-signed-integer (vec offset &optional (bytes 1))
+  "Reads and returns signed integer from a vector of octets.
+  `offset` is the start of the integer, not its marker.
+  `bytes` is the number of octets used for encoding the number, e.g. 2 means a 16-bit integer.
+  Heavily inspired by cl-binary-file:read-integer."
+  (declare (type array vec)
+           (type integer offset))
+  (let ((value 0)
+        (shift (* (1- bytes) 8))
+        (pointer offset))
+    (loop for i from 1 to bytes
+          do (setq value
+                   (logior value
+                           (ash (aref vec pointer)
+                                shift)))
+          (setq shift (- shift 8))
+          (setq pointer (1+ pointer)))
+    (twos-complement-signed value bytes)))
+
 (defun decode-int (vec offset)
   "Parse an integer from the vector, using the starting offset to find it.
   Return a 3-element list:
@@ -150,7 +169,10 @@
   - integer: the number of octets occupied by the header."
   (declare (type vector vec)
            (type integer offset))
-  ;(log-message :debug (format nil "Parsing an integer at offset ~D" offset))
+  ;; Implementation note:
+  ;; For anything above a tinyint, first we check whether it's a signed negative integer.
+  ;; If it is, invoke `read-signed-integer` to interpret.
+  ;; If not, read it directly.
   (let ((marker (aref vec offset)))
     (cond (
            ;; Positive tiny int
@@ -159,35 +181,51 @@
           ;; Negative tiny int
           ((equal #xf (ldb (byte 4 4) marker))
            (values (- (ldb (byte 4 0) marker) 16) 0 1))
-          ;; Positive 8-bit integer
+          ;; 8-bit integer
           ((equal #xc8  marker)
-           (values (aref vec (+ offset 1)) 1 1))
-          ;; Positive 16-bit integer
+           (values
+             (if (logbitp 7 (aref vec (+ offset 1)))
+               (read-signed-integer vec (1+ offset) 1)
+               (aref vec (+ offset 1)))
+             1 1))
+          ;; 16-bit integer
           ((equal #xc9 marker)
-           (let ((result 0))
-             (setf (ldb (byte 8 8) result) (aref vec (+ offset 1)))
-             (setf (ldb (byte 8 0) result) (aref vec (+ offset 2)))
-             (values result 2 1)))
-          ;; Positive 32-bit integer
+           (values
+             (if (logbitp 7 (aref vec (+ offset 1)))
+               (read-signed-integer vec (1+ offset) 2)
+               (let ((result 0))
+                 (setf (ldb (byte 8 8) result) (aref vec (+ offset 1)))
+                 (setf (ldb (byte 8 0) result) (aref vec (+ offset 2)))
+                 result))
+             2 1))
+          ;; 32-bit integer
           ((equal #xca marker)
-           (let ((result 0))
-             (setf (ldb (byte 8 24) result) (aref vec (+ offset 1)))
-             (setf (ldb (byte 8 16) result) (aref vec (+ offset 2)))
-             (setf (ldb (byte 8 8) result) (aref vec (+ offset 3)))
-             (setf (ldb (byte 8 0) result) (aref vec (+ offset 4)))
-             (values result 4 1)))
-          ;; Positive 64-bit integer
+           (values
+             (if (logbitp 7 (aref vec (+ offset 1)))
+               (read-signed-integer vec (1+ offset) 4)
+               (let ((result 0))
+                 (setf (ldb (byte 8 24) result) (aref vec (+ offset 1)))
+                 (setf (ldb (byte 8 16) result) (aref vec (+ offset 2)))
+                 (setf (ldb (byte 8 8) result) (aref vec (+ offset 3)))
+                 (setf (ldb (byte 8 0) result) (aref vec (+ offset 4)))
+                 result))
+             4 1))
+          ;; 64-bit integer
           ((equal #xcb marker)
-           (let ((result 0))
-             (setf (ldb (byte 8 56) result) (aref vec (+ offset 1)))
-             (setf (ldb (byte 8 48) result) (aref vec (+ offset 2)))
-             (setf (ldb (byte 8 40) result) (aref vec (+ offset 3)))
-             (setf (ldb (byte 8 32) result) (aref vec (+ offset 4)))
-             (setf (ldb (byte 8 24) result) (aref vec (+ offset 5)))
-             (setf (ldb (byte 8 16) result) (aref vec (+ offset 6)))
-             (setf (ldb (byte 8 8) result) (aref vec (+ offset 7)))
-             (setf (ldb (byte 8 0) result) (aref vec (+ offset 8)))
-             (values result 8 1)))
+           (values
+             (if (logbitp 7 (aref vec (+ offset 1)))
+               (read-signed-integer vec (1+ offset) 8)
+               (let ((result 0))
+                 (setf (ldb (byte 8 56) result) (aref vec (+ offset 1)))
+                 (setf (ldb (byte 8 48) result) (aref vec (+ offset 2)))
+                 (setf (ldb (byte 8 40) result) (aref vec (+ offset 3)))
+                 (setf (ldb (byte 8 32) result) (aref vec (+ offset 4)))
+                 (setf (ldb (byte 8 24) result) (aref vec (+ offset 5)))
+                 (setf (ldb (byte 8 16) result) (aref vec (+ offset 6)))
+                 (setf (ldb (byte 8 8) result) (aref vec (+ offset 7)))
+                 (setf (ldb (byte 8 0) result) (aref vec (+ offset 8)))
+                 result))
+             8 1))
           ;; Fall back to error
           (t
             (error 'bolt-error

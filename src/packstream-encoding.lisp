@@ -53,7 +53,28 @@
             (t
              +packstream-true+))))
 
-;; FIXME: encode negative non-tiny integers
+(defun integer-to-bytes (value &optional (bytes 1) (marker #xc8))
+  "Transform an integer into a list of 8-bit unsigned bytes.
+   Intended for use with negative integers.
+   The `bytes` argument is the number of octets in the output vector,
+   so for a 16-bit number you should specify 2.
+   The `marker` argument should be one of #xc8, #xc9, #xca or #xcb.
+   Heavily inspired by cl-binary-file:write-integer."
+  (declare (type integer value bytes))
+  ;; Sanity checks
+  (when (< bytes 1)
+    (error "bytes argument must be >0."))
+  (when (> (/ (integer-length value) 8.0) bytes)
+    (error "Value ~D is too big to fit in ~D bytes" value bytes))
+  ;; Generate the result
+  (make-array
+    (1+ bytes)
+    :element-type '(unsigned-byte 8)
+    ;; int-bytes returns its output in LSB format, while Packstream is a big-endian format.
+    :initial-contents (cons
+                        marker
+                        (reverse (int-bytes (twos-complement value bytes) bytes)))))
+
 (defun encode-integer (int)
   "Encode an integer into a vector containing a packstream Int."
   (declare (type integer int))
@@ -86,6 +107,19 @@
     ;; Negative Tiny Int
     ((<= -16 int -1)
      (vector (dpb (ldb (byte 4 0) (+ 16 int)) (byte 4 0) #xF0)))
+    ;; Negative 8-bit integer: INT_8
+    ;; TINYINT only covers the first nibble's worth.
+    ((<= -128 int -17)
+     (integer-to-bytes int 1 #xc8))
+    ;; Negative 16-bit integer
+    ((<= -32768 int -129)
+     (integer-to-bytes int 2 #xc9))
+    ;; Negative 32-bit integer
+    ((<= -2147483648 int -32769)
+     (integer-to-bytes int 4 #xca))
+    ;; Negative 64-bit integer
+    ((<= -9223372036854775808 int -2147483649)
+     (integer-to-bytes int 8 #xcb))
     ;; Fall back to failure
     (t (error "Integer out of range."))))
 
