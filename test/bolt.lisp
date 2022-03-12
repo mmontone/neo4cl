@@ -97,11 +97,13 @@
     ;; Basic queries
     (fiveam:is (null (neo4cl:bolt-transaction-autocommit session "CREATE (:foo {name: \"bar\"})")))
     (fiveam:is (null (neo4cl:bolt-transaction-autocommit session "CREATE (:foo {name: \"baz\"})")))
-    (fiveam:is (equal '((("name" . "bar") ("label" . "foo"))
-                        (("name" . "baz") ("label" . "foo")))
-                      (neo4cl:bolt-transaction-autocommit
-                        session
-                        "MATCH (p:foo) RETURN p.name AS name, LABELS(p) AS label")))
+    (let ((result (neo4cl:bolt-transaction-autocommit
+                    session
+                    "MATCH (p:foo) RETURN p.name AS name, LABELS(p) AS label")))
+      (fiveam:is (= 2 (length result)))
+      (fiveam:is (equalp '((("name" . "bar") ("label" . "foo"))
+                           (("name" . "baz") ("label" . "foo")))
+                         result)))
     (fiveam:is (null (neo4cl:bolt-transaction-autocommit session "MATCH (p:foo) DELETE p")))
     ;; Parameterised CREATE - hash-table edition
     (let ((params (make-hash-table :test #'equal)))
