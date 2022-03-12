@@ -13,8 +13,6 @@ Neo4CL is very simple library that sends Cypher queries to a Neo4J server, and d
 
 ## Status
 
-### Bolt client
-
 Alpha: it works and there's a test suite, but not all functionality is implemented yet, and it hasn't been fully production-tested.
 
 Working:
