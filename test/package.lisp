@@ -16,6 +16,5 @@
   (:use #:cl
         #:neo4cl)
   (:export main
-           http
            bolt
            packstream))

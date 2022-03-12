@@ -22,6 +22,5 @@
                #:flexi-streams)
   :components ((:file "package")
                (:file "main")
-               (:file "http")
                (:file "bolt")
                (:file "packstream")))

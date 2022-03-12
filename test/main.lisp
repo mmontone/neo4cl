@@ -13,22 +13,12 @@
 ;   limitations under the License.
 
 
-;;;; Test suite for HTTP driver
-
-
 (in-package #:neo4cl-test)
 
 (declaim (optimize (compilation-speed 0)
                    (speed 2)
                    (safety 3)
                    (debug 3)))
-
-(defparameter *http-server*
-  ;; We don't need to specify hostname, port or protocol, since in this
-  ;; case we're using the defaults.
-  ;; Should probably test each of the permutations, though.
-  (make-instance 'neo4cl:neo4j-rest-server
-                 :dbpasswd "wallaby"))
 
 (defparameter *bolt-auth-basic*
   (make-instance 'neo4cl:bolt-auth-basic

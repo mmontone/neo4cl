@@ -17,18 +17,12 @@
   :license "Apache license 2.0"
   :author "James Fleming <james@electronic-quill.net>"
   :description "Basic library for interacting with Neo4J"
-  :depends-on (#:cl-base64      ; base64 encoding/decoding
-               #:cl-ppcre       ; Check UUID formatting and identify error strings
-               #:cl-json        ; Encode/decode json requests
-               #:drakma         ; Send requests to the neo4j server
-               #:flexi-streams  ; Convert between strings and octets
-               #:usocket        ; Universal sockets library
+  :depends-on (#:usocket        ; Universal sockets library
                #:trivial-utf-8  ; Efficient UTF-8 serialisation/deserialisation
                )
   :components ((:file "package")
                (:file "logging")
                (:file "conditions")
-               (:file "http")
                (:file "binary-file")
                (:file "packstream-structures")
                (:file "packstream-encoding")
