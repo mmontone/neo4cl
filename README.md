@@ -29,18 +29,18 @@ Working:
     - `nil` -> `Null`
     - `Boolean`
     - `string` -> `String`
-    - 8-bit integers -> `Integer`
-        - Longer integers will be supported in future.
+    - `integer` -> `Integer`
     - `list` -> `List`
     - `hash-table` -> `Dictionary`
+    - `alist` -> `Dictionary`
 - Packstream -> Lisp implementation:
     - `Null` -> `nil`
     - `Boolean` -> `t` and `nil`
-    - `TINYINT` -> `integer`
+    - `Integer` -> `integer`
     - `String` -> `string`
     - `List` -> `list`
-    - `Dictionary` -> `alist`
-        - `Dictionary` is defined to potentially return multiple values for the same key; alists support this, but hash-tables don't.
+    - `Dictionary` -> `hash-table`
+        - `Dictionary` is defined to potentially return multiple values for the same key, but the spec also states that the last-received value takes precedence in the event of key collisions. Hash-tables support this behaviour by nature, while doing this with alists involves more messing around..
     - Structures are parsed into CL classes, whose symbols are exported from the package:
         - `Node` -> `node`
         - `Relationship` -> `relationship`
@@ -55,13 +55,14 @@ Not yet implemented:
     - `Float`
     - `Bytes`
     - `Structure` types other than `Node` and `Relationship`
-    - Negative integers are not implemented for values greater than 8 bits.
-- TLS/SSL connections (yet).
+- TLS/SSL connections.
+
+There is an issue for each of these things in Github.
 
 
 Not implemented, and not on the roadmap:
 
-- Anything involving Cypher itself. It forwards the query string, and assumes the server will know what to do with it.
+- Anything involving Cypher itself. It forwards the query string and parameters, and assumes the server will know what to do with that.
 - Any kind of object-graph mapping.
 
 
