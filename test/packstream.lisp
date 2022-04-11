@@ -67,6 +67,12 @@
                      (neo4cl::encode-integer -9223372036854775808))))
 
 (fiveam:test
+  encode-float
+  "Serialise floating-point values."
+  (fiveam:is (equalp (vector #xc1 #x3F #xF3 #xAE #x14 #x7A #xE1 #x47 #xAE)
+                     (neo4cl::encode-float 1.23d0))))
+
+(fiveam:test
   encode-list
   "Serialise lists."
   ;; Null list
@@ -141,7 +147,28 @@
     (fiveam:is (equalp (vector #xA1
                                #x83 #x6F #x6E #x65
                                #x84 #x65 #x69 #x6E #x73)
-                       (neo4cl::encode-element lst)))))
+                       (neo4cl::encode-element lst))))
+  ;; Date
+  (fiveam:is (equalp (vector #xB1
+                             #x44
+                             #xCB #x00 #x00 #x00 #x00 #xE6 #x02 #xE8 #x2F)
+                     (neo4cl::encode-element (make-instance 'neo4cl::date
+                                                            :days 3858950191))))
+  ;; Time (timestructure)
+  ;; Use UTC for simplicity's sake
+  (fiveam:is (equalp (vector #xB2
+                             #x54
+                             #xCB #x00 #x00 #x00 #x00 #x97 #xF3 #x4E #x74
+                             #x0)
+                     (neo4cl::encode-element (make-instance 'neo4cl::timestructure
+                                                            :nanoseconds 2549304948
+                                                            :tz-offset-seconds 0))))
+  ;; LocalTime
+  (fiveam:is (equalp (vector #xB1
+                             #x74
+                             #xCB #x00 #x00 #x00 #x00 #x97 #xF3 #x4E #x74)
+                     (neo4cl::encode-element (make-instance 'neo4cl::localtime
+                                                            :nanoseconds 2549304948)))))
 
 
 ;;; Parsing/decoding
@@ -218,6 +245,11 @@
     (fiveam:is (equal -9223372036854775808 result))
     (fiveam:is (equal 8 len))
     (fiveam:is (equal 1 hdrlen))))
+
+(fiveam:test
+  read-float
+  (fiveam:is (equal 1.23d0
+                    (neo4cl::read-float (vector #xc1 #x3F #xF3 #xAE #x14 #x7A #xE1 #x47 #xAE) 0))))
 
 (fiveam:test
   string-length

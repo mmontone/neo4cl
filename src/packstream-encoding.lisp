@@ -123,6 +123,20 @@
     ;; Fall back to failure
     (t (error "Integer out of range."))))
 
+(defun encode-float (num)
+  "Encode floating-point numbers into 64-bit binary format, per IEEE 754."
+  (declare (type float num))
+  (let ((val (ieee-floats:encode-float64 num)))
+    (vector #xc1
+            (ldb (byte 8 56) val)
+            (ldb (byte 8 48) val)
+            (ldb (byte 8 40) val)
+            (ldb (byte 8 32) val)
+            (ldb (byte 8 24) val)
+            (ldb (byte 8 16) val)
+            (ldb (byte 8 8) val)
+            (ldb (byte 8 0) val))))
+
 (defun encode-string (str)
   "Packstream type: String. Description: unicode text, UTF-8"
   (declare (type string str))
@@ -275,25 +289,112 @@
           ;; Return the result
           (vectorise-list (nreverse acc))))))
 
-(defun encode-element (element)
-  "General-purpose dispatching function for encoding things into Packstream format.
-   Note that an empty list will be encoded as Null, not as a zero-element list."
-  (cond
-    ((equal :null element)
-     (encode-null))
-    ((member element '(:true :false))
-     (encode-boolean element))
-    ((typep element 'integer)
-     (encode-integer element))
-    ((typep element 'string)
-     (encode-string element))
-    ((alist-p element)
-     (encode-alist element))
-    ((typep element 'list)
-     (encode-list element))
-    ((typep element 'hash-table)
-     (encode-hash-table element))
-    (t
-     (error 'packstream-error
-            :category "encode"
-            :message (format nil "Unhandled element-type: ~A." (type-of element))))))
+
+(defgeneric encode-element (element)
+  (:documentation "Encode a thing into Packstream format. Note that an empty list will be encoded as Null, not as a zero-element list."))
+
+(defmethod encode-element ((element (eql :null)))
+  (encode-null))
+
+(defmethod encode-element ((element (eql :true)))
+  (encode-boolean :true))
+
+(defmethod encode-element ((element (eql :false)))
+  (encode-boolean :false))
+
+(defmethod encode-element ((element integer))
+  (encode-integer element))
+
+(defmethod encode-element ((element double-float))
+  (encode-float element))
+
+(defmethod encode-element ((element float))
+  (encode-float (coerce element 'double-float)))
+
+(defmethod encode-element ((element string))
+  (encode-string element))
+
+(defmethod encode-element ((element hash-table))
+  (encode-hash-table element))
+
+(defmethod encode-element ((element list))
+  (if (alist-p element)
+      (encode-alist element)
+      (encode-list element)))
+
+(defmethod encode-element ((element date))
+  (vectorise-list
+    (list
+      (vector #xb1) ; 1-field structure
+      (vector #x44) ; Date
+      (encode-integer (days element)))))
+
+(defmethod encode-element ((element timestructure))
+  (vectorise-list
+    (list
+      (vector #xb2)
+      (vector #x54)
+      (encode-integer (nanoseconds element))
+      (encode-integer (tz-offset-seconds element)))))
+
+(defmethod encode-element ((element localtime))
+  (vectorise-list
+    (list
+      (vector #xb1)
+      (vector #x74)
+      (encode-integer (nanoseconds element)))))
+
+(defmethod encode-element ((element datetime))
+  (vectorise-list
+    (list
+      (vector #xb3)
+      (vector #x46)
+      (encode-integer (seconds element))
+      (encode-integer (nanoseconds element))
+      (encode-integer (tz-offset-seconds element)))))
+
+(defmethod encode-element ((element datetimezoneid))
+  (vectorise-list
+    (list
+      (vector #xb3)
+      (vector #x66)
+      (encode-integer (seconds element))
+      (encode-integer (nanoseconds element))
+      (encode-string (tz-id element)))))
+
+(defmethod encode-element ((element localdatetime))
+  (vectorise-list
+    (list
+      (vector #xb2)
+      (vector #xd)
+      (encode-integer (seconds element))
+      (encode-integer (nanoseconds element)))))
+
+(defmethod encode-element ((element duration))
+  (vectorise-list
+    (list
+      (vector #xb4)
+      (vector #x45)
+      (encode-integer (months element))
+      (encode-integer (days element))
+      (encode-integer (seconds element))
+      (encode-integer (nanoseconds element)))))
+
+(defmethod encode-element ((element point2d))
+  (vectorise-list
+    (list
+      (vector #xb3)
+      (vector #x58)
+      (encode-integer (srid element))
+      (encode-float (x element))
+      (encode-float (y element)))))
+
+(defmethod encode-element ((element point3d))
+  (vectorise-list
+    (list
+      (vector #xb4)
+      (vector #x59)
+      (encode-integer (srid element))
+      (encode-float (x element))
+      (encode-float (y element))
+      (encode-float (z element)))))

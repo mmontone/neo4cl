@@ -232,6 +232,23 @@
                    :category "parse" :message
                    "Unhandled integer.")))))
 
+(defun read-float (vec offset)
+  "Parse an integer from the vector, using the starting offset to find it.
+   The non-pattern name is due to a collision with the standard function `decode-float`.
+   - float the float itself
+   - integer: the number of octets in the vector occupied by the string.
+   - integer: the number of octets occupied by the header."
+  (let ((val 0))
+    (setf (ldb (byte 8 56) val) (aref vec (+ offset 1)))
+    (setf (ldb (byte 8 48) val) (aref vec (+ offset 2)))
+    (setf (ldb (byte 8 40) val) (aref vec (+ offset 3)))
+    (setf (ldb (byte 8 32) val) (aref vec (+ offset 4)))
+    (setf (ldb (byte 8 24) val) (aref vec (+ offset 5)))
+    (setf (ldb (byte 8 16) val) (aref vec (+ offset 6)))
+    (setf (ldb (byte 8 8) val) (aref vec (+ offset 7)))
+    (setf (ldb (byte 8 0) val) (aref vec (+ offset 8)))
+    (values (ieee-floats:decode-float64 val) 8 1)))
+
 (defun decode-string (vec offset)
   "Parse a string from the vector, using the starting offset to find it.
    Return 3 values:
@@ -357,6 +374,65 @@
                  :relationship-type (aref arr 3)
                  :relationship-properties (aref arr 4)))
 
+(defun vector-to-date (arr)
+  "Take a 1-field array, and return a 'date instance."
+  (make-instance 'date
+                 :days (aref arr 0)))
+
+(defun vector-to-time (arr)
+  "Take a 2-field array, and return a 'timestructure instance."
+  (make-instance 'timestructure
+                 :nanoseconds (aref arr 0)
+                 :tz-offset-seconds (aref arr 1)))
+
+(defun vector-to-localtime (arr)
+  "Take a 1-field array, and return a 'localtime instance."
+  (make-instance 'localtime
+                 :nanoseconds (aref arr 0)))
+
+(defun vector-to-datetime (arr)
+  "Take a 3-field array, and return a 'datetime instance."
+  (make-instance 'datetime
+                 :seconds (aref arr 0)
+                 :nanoseconds (aref arr 1)
+                 :tz-offset-seconds (aref arr 2)))
+
+(defun vector-to-datetimezoneid (arr)
+  "Take a 3-field array, and return a 'datetimezoneid instance."
+  (make-instance 'datetimezoneid
+                 :seconds (aref arr 0)
+                 :nanoseconds (aref arr 1)
+                 :tz-id (aref arr 2)))
+
+(defun vector-to-localdatetime (arr)
+  "Take a 2-field array, and return a 'localdatetime instance."
+  (make-instance 'localdatetime
+                 :seconds (aref arr 0)
+                 :nanoseconds (aref arr 1)))
+
+(defun vector-to-duration (arr)
+  "Take a 4-field array, and return a 'duration instance."
+  (make-instance 'duration
+                 :months (aref arr 0)
+                 :days (aref arr 1)
+                 :seconds (aref arr 2)
+                 :nanoseconds (aref arr 3)))
+
+(defun vector-to-point2d (arr)
+  "Take a 3-field array, and return a 'point2d instance."
+  (make-instance 'point2d
+                 :srid (aref arr 0)
+                 :x (aref arr 1)
+                 :y (aref arr 2)))
+
+(defun vector-to-point3d (arr)
+  "Take a 4-field array, and return a 'point3d instance."
+  (make-instance 'point3d
+                 :srid (aref arr 0)
+                 :x (aref arr 1)
+                 :y (aref arr 2)
+                 :z (aref arr 3)))
+
 (defun decode-structure (vec offset)
   "Unpack a structure. Returns a 3-element list:
    - A 1-dimensional array, with an element in that dimension for each field in the structure.
@@ -389,12 +465,39 @@
       ;; Create a valid return value from the vector,
       ;; dispatching on the tag-byte.
       (cond
-        ;; Tag-byte = N for node
+        ;; Tag-byte = N for Node
         ((equal #x4e tag-byte)
          (vector-to-node acc))
-        ;; Tag-byte = R for relationship
+        ;; Tag-byte = R for Relationship
         ((equal #x52 tag-byte)
          (vector-to-relationship acc))
+        ;; Tag-byte = D for Date
+        ((equal #x44 tag-byte)
+         (vector-to-date acc))
+        ;; Tag-byte = T for Time
+        ((equal #x54 tag-byte)
+         (vector-to-time acc))
+        ;; Tag-byte = t for LocalTime
+        ((equal #x74 tag-byte)
+         (vector-to-localtime acc))
+        ;; Tag-byte = F for DateTime
+        ((equal #x46 tag-byte)
+         (vector-to-datetime acc))
+        ;; Tag-byte = f for DateTimeZoneId
+        ((equal #x66 tag-byte)
+         (vector-to-datetimezoneid acc))
+        ;; Tag-byte = d for LocalDateTime
+        ((equal #xd tag-byte)
+         (vector-to-localdatetime acc))
+        ;; Tag-byte = E for Duration
+        ((equal #x45 tag-byte)
+         (vector-to-duration acc))
+        ;; Tag-byte = X for Point2d
+        ((equal #x58 tag-byte)
+         (vector-to-point2d acc))
+        ;; Tag-byte = Y for Point3d
+        ((equal #x59 tag-byte)
+         (vector-to-point3d acc))
         ;; Fall back to error
         (t
          (error 'packstream-error
@@ -428,6 +531,7 @@
       ;; Integer
       ((equal "Integer" element-type) (decode-int vec offset))
       ;; Float
+      ((equal "Float" element-type) (read-float vec offset))
       ;; Bytes
       ;; String
       ((equal "String" element-type) (decode-string vec offset))

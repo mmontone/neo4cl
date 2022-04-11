@@ -19,6 +19,7 @@
   :description "Basic library for interacting with Neo4J"
   :depends-on (#:usocket        ; Universal sockets library
                #:trivial-utf-8  ; Efficient UTF-8 serialisation/deserialisation
+               #:ieee-floats    ; Floating-point encoding/decoding
                )
   :components ((:file "package")
                (:file "logging")

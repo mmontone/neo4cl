@@ -207,6 +207,94 @@
                         session
                         "MATCH (p:foo) RETURN p.name AS name, LABELS(p) AS label")))
     (neo4cl:bolt-transaction-autocommit session "MATCH (p:foo) DELETE p")
+    ;; Positive double-float
+    (neo4cl:bolt-transaction-autocommit session "CREATE (:foo {val: $float})"
+                                        :parameters '(("float" . 1.23)))
+    ;; Note that the return value is *specifically* a double-float
+    (fiveam:is (equal '((("val" . 1.2300000190734863d0)))
+                      (neo4cl:bolt-transaction-autocommit
+                        session
+                        "MATCH (p:foo) RETURN p.val AS val")))
+    (neo4cl:bolt-transaction-autocommit session "MATCH (p:foo) DELETE p")
+    ;; Negative double-float
+    (neo4cl:bolt-transaction-autocommit session "CREATE (:foo {val: $float})"
+                                        :parameters '(("float" . -1.23)))
+    ;; Note that the return value is *specifically* a double-float
+    (fiveam:is (equal '((("val" . -1.2300000190734863d0)))
+                      (neo4cl:bolt-transaction-autocommit
+                        session
+                        "MATCH (p:foo) RETURN p.val AS val")))
+    (neo4cl:bolt-transaction-autocommit session "MATCH (p:foo) DELETE p")
+    ;; Date structure
+    (let ((testval (make-instance 'date :days 123)))
+      (neo4cl:bolt-transaction-autocommit session
+                                          "CREATE (:foo { date: $date })"
+                                          :parameters `(("date" . ,testval)))
+      (let ((result (cdr (assoc "date"
+                                (car (neo4cl:bolt-transaction-autocommit
+                                       session
+                                       "MATCH (p:foo) RETURN p.date as date"))
+                                :test #'equal))))
+        (fiveam:is (equalp (neo4cl::days testval) (neo4cl::days result)))))
+    (neo4cl:bolt-transaction-autocommit session "MATCH (p:foo) DELETE p")
+    ;; Duration structure
+    (let ((testval (make-instance 'duration
+                                  :months 1
+                                  :days 1
+                                  :seconds 24
+                                  :nanoseconds 1234)))
+      (neo4cl:bolt-transaction-autocommit session
+                                          "CREATE (:foo { duration: $duration })"
+                                          :parameters `(("duration" . ,testval)))
+      (let ((result (cdr (assoc "duration"
+                                (car (neo4cl:bolt-transaction-autocommit
+                                       session
+                                       "MATCH (p:foo) RETURN p.duration as duration"))
+                                :test #'equal))))
+        (fiveam:is (equalp (neo4cl::months testval) (neo4cl::months result)))
+        (fiveam:is (equalp (neo4cl::days testval) (neo4cl::days result)))
+        (fiveam:is (equalp (neo4cl::seconds testval) (neo4cl::seconds result)))
+        (fiveam:is (equalp (neo4cl::nanoseconds testval) (neo4cl::nanoseconds result)))))
+    (neo4cl:bolt-transaction-autocommit session "MATCH (p:foo) DELETE p")
+    ;; Point2d structure
+    ;; From https://metacpan.org/pod/Neo4j::Types::Point#srid I get this reference:
+    ;; "To date, Neo4j has defined four SRIDs: 4326, 4979, 7203, and 9157"
+    ;; Of those, 4326 and 7203 appear to be 2D, while 4979 and 9157 are 3D.
+    (let ((testval (make-instance 'point2d
+                                  :srid 4326
+                                  :x 1.23
+                                  :y 2.34)))
+      (neo4cl:bolt-transaction-autocommit session
+                                          "CREATE (:foo { point: $point })"
+                                          :parameters `(("point" . ,testval)))
+      (let ((result (cdr (assoc "point"
+                                (car (neo4cl:bolt-transaction-autocommit
+                                       session
+                                       "MATCH (p:foo) RETURN p.point as point"))
+                                :test #'equal))))
+        (fiveam:is (equalp (neo4cl::srid testval) (neo4cl::srid result)))
+        (fiveam:is (equalp (neo4cl::x testval) (neo4cl::x result)))
+        (fiveam:is (equalp (neo4cl::y testval) (neo4cl::y result)))))
+    (neo4cl:bolt-transaction-autocommit session "MATCH (p:foo) DELETE p")
+    ;; Point3d structure
+    (let ((testval (make-instance 'point3d
+                                  :srid 9157
+                                  :x 1.23
+                                  :y 2.34
+                                  :z 3.45)))
+      (neo4cl:bolt-transaction-autocommit session
+                                          "CREATE (:foo { point: $point })"
+                                          :parameters `(("point" . ,testval)))
+      (let ((result (cdr (assoc "point"
+                                (car (neo4cl:bolt-transaction-autocommit
+                                       session
+                                       "MATCH (p:foo) RETURN p.point as point"))
+                                :test #'equal))))
+        (fiveam:is (equalp (neo4cl::srid testval) (neo4cl::srid result)))
+        (fiveam:is (equalp (neo4cl::x testval) (neo4cl::x result)))
+        (fiveam:is (equalp (neo4cl::y testval) (neo4cl::y result)))
+        (fiveam:is (equalp (neo4cl::z testval) (neo4cl::z result)))))
+    (neo4cl:bolt-transaction-autocommit session "MATCH (p:foo) DELETE p")
     ;; Disconnect
     (neo4cl::log-message :debug "Disconnecting session.")
     (neo4cl:disconnect session)))
