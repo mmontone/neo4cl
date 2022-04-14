@@ -17,12 +17,14 @@
     #:cl)
   (:export
     ;;; Bolt client
-    ;; Classes
+    ;; Main classes and their methods
     bolt-server
     bolt-auth-basic
     bolt-auth-none
     neo4j-version
     neo4j-4-3-9
+    hostname
+    port
     ;; bolt-session class and its methods
     bolt-session
     connect
@@ -49,30 +51,24 @@
     end-node-id
     relationship-type
     relationship-properties
+    unbound-relationship
+    path
+    date
+    timestructure
+    localtime
+    datetime
+    datetimezoneid
+    localdatetime
+    duration
+    point2d
+    point3d
     ;; Conditions
     bolt-error
-    packstream-error
-    ;;;
-    ;;; HTTP client
-    ;; Data structures
-    neo4j-rest-server
-    dbname
-    dbpasswd
-    hostname
-    port
-    ;; Functions
-    change-password
-    extract-data-from-get-request
-    extract-rows-from-get-request
-    get-user-status
-    neo4j-transaction
-    ;; Errors and sundry conditions
     client-error
-    client-notification
-    transient-error
     database-error
+    packstream-error
     service-error
-    ;; Error-related symbols
+    transient-error
     category
-    title
-    message))
+    message
+    title))
