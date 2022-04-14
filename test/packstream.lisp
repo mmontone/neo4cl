@@ -141,7 +141,7 @@
     (fiveam:is (equalp (vector #xA1
                                #x83 #x6F #x6E #x65
                                #x84 #x65 #x69 #x6E #x73)
-                       (neo4cl::encode-alist lst)))))
+                       (neo4cl::encode-element lst)))))
 
 
 ;;; Parsing/decoding
