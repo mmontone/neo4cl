@@ -563,7 +563,7 @@
         ;; The query itself
         (encode-string query)
         ;; Encode any supplied parameters
-        (encode-element parameters)
+        (encode-alist parameters)
         ;; Encode the extras
         (encode-hash-table extra))))
   ;; Receive response
