@@ -26,15 +26,19 @@ Working:
     - `Boolean`
     - `string` -> `String`
     - `integer` -> `Integer`
+    - `float` -> `Float`
     - `list` -> `List`
     - `hash-table` -> `Dictionary`
     - `alist` -> `Dictionary`
+    - Structures
 - Packstream -> Lisp implementation:
     - `Null` -> `nil`
     - `Boolean` -> `t` and `nil`
     - `Integer` -> `integer`
+    - `Float` -> `double-float`
     - `String` -> `string`
     - `List` -> `list`
+    - Structures
     - `Dictionary` -> `hash-table`
         - `Dictionary` is defined to potentially return multiple values for the same key, but the spec also states that the last-received value takes precedence in the event of key collisions. Hash-tables support this behaviour by nature, while doing this with alists involves more messing around..
     - Structures are parsed into CL classes, whose symbols are exported from the package:
@@ -48,9 +52,7 @@ Not yet implemented:
 - Routing.
 - Multi-chunk encoding of large client messages.
 - Packstream parsing _not_ implemented:
-    - `Float`
     - `Bytes`
-    - `Structure` types other than `Node` and `Relationship`
 - TLS/SSL connections.
 
 There is an issue for each of these things in Github.
@@ -78,9 +80,9 @@ Not implemented, and not on the roadmap:
 
 ## Lisp compatibility
 
-SBCL only.
+SBCL.
 
-Once it's fully functional for Neo4j 4.3 and 4.4, support may be added for other implementations, if any interest is shown.
+Support may be added for other implementations once it's fully functional for Neo4j 4.3 and 4.4, if any interest is shown. PRs are welcome, to assist with this or any other aspect.
 
 
 ## Dependencies
