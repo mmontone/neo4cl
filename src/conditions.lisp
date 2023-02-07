@@ -56,6 +56,10 @@
 (define-condition bolt-error (error)
   ((category :initarg :category :reader category)
    (message :initarg :message :reader message))
+  (:report (lambda (condition stream)
+	     (format stream "Bolt error [~a]: ~a"
+		     (category condition)
+		     (message condition))))
   (:documentation "The server reported an error relating to a Bolt session."))
 
 (define-condition packstream-error (error)
