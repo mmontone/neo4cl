@@ -108,40 +108,44 @@
     (cond
       ;; Tiny element. Length is in lower 4 bits.
       ((equal mtiny (ldb (byte 4 4) marker))
-       ;(log-message :debug "Tiny element: length is in the lower nibble of the marker.")
+       (log-message :debug "Tiny element: length is in the lower nibble of the marker.")
        (let ((len (dpb (ldb (byte 4 0) marker)
                                  (byte 4 0)
                                  0)))
-         ;(log-message :debug (format nil "Length: ~D octets." len))
+         (log-message :debug (format nil "Length: ~D octets." len))
+         ;; Marker-length: 1 octet for the marker itself.
          (list len 1)))
       ;; Longer element: 8-bit integer
       ((equal m8 marker)
-       ;(log-message :debug (format nil "Length in 16-255 octet range."))
+       (log-message :debug (format nil "Length in 16-255 octet range."))
        ;; Get the length in a single hit, because it's simple when it's 1 octet
        (let ((len (dpb (aref vec (+ offset 1))
                                  (byte 8 0)
                                  0)))
-         ;(log-message :debug (format nil "Length: ~D octets." len))
+         (log-message :debug (format nil "Length: ~D octets." len))
+         ;; Marker-length: 1 octet for the marker, plus 1 for the length octet.
          (list len 2)))
-      ;; Longer string: 16-bit integer
+      ;; Longer element: 16-bit integer
       ((equal m16 marker)
-       ;(log-message :debug (format nil "Length in 256-65535 octet range."))
+       (log-message :debug (format nil "Length in 256-65535 octet range."))
        ;; Take a couple more steps to get the length, because now we need to poll 2 octets
        (let ((len 0))
          (setf len (dpb (aref vec (+ offset 1)) (byte 8 8) len))
          (setf len (dpb (aref vec (+ offset 2)) (byte 8 0) len))
-         ;(log-message :debug (format nil "Length: ~D octets." len))
+         (log-message :debug (format nil "Length: ~D octets." len))
+         ;; Marker-length: 1 octet for the marker, plus 2 for the length octets.
          (list len 3)))
-      ;; Longer string: 32 integer
+      ;; Longer element: 32-bit integer
       ((equal m32 marker)
-       ;(log-message :debug (format nil "Length > 65535 octets."))
-       ;; Take a couple more steps to get the length, because now we need to poll 2 octets
+       (log-message :debug (format nil "Length > 65535 octets."))
+       ;; Take a couple more steps to get the length, because now we need to poll 4 octets
        (let ((len 0))
-         (setf len (dpb (aref vec (+ offset 1)) (byte 8 0) len))
-         (setf len (dpb (aref vec (+ offset 2)) (byte 8 8) len))
-         (setf len (dpb (aref vec (+ offset 3)) (byte 8 16) len))
-         (setf len (dpb (aref vec (+ offset 4)) (byte 8 24) len))
-         ;(log-message :debug (format nil "Length: ~D octets." len))
+         (setf len (dpb (aref vec (+ offset 1)) (byte 8 24) len))
+         (setf len (dpb (aref vec (+ offset 2)) (byte 8 16) len))
+         (setf len (dpb (aref vec (+ offset 3)) (byte 8  8) len))
+         (setf len (dpb (aref vec (+ offset 4)) (byte 8  0) len))
+         (log-message :debug (format nil "Length: ~D octets." len))
+         ;; Marker-length: 1 octet for the marker, plus 4 for the length octets.
          (list len 5)))
       ;; Fall back to error
       (t (error 'packstream-error :category "marker"

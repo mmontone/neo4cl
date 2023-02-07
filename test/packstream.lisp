@@ -284,7 +284,7 @@
                       0)))
   ;; 32-bit string length at start of vector
   ;; No, the string itself isn't that long, but we're not actually parsing it anyway.
-  (fiveam:is (equal '(167987218 5)
+  (fiveam:is (equal '(306709258 5)
                     (neo4cl::get-string-length
                       (vector #xD2 #x12 #x48 #x03 #x0A
                               #x41 #x42 #x43 #x44 #x45 #x46 #x47 #x49 #x50
