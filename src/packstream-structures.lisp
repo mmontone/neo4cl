@@ -40,7 +40,7 @@
             :type integer
             :documentation "Node identifier. Mostly useful for correlating with relationships.")
    (node-labels :initarg :node-labels
-                :reader :node-labels
+                :reader node-labels
                 :type list
                 :documentation "The node's labels, represented as a list of strings.")
    (node-properties :initarg :node-properties
