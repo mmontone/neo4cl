@@ -424,7 +424,7 @@
 
 
 (defun read-tx-responses (session &key messages)
-  "Digest the output of read-bolt-messages-from-stream (plural version), which should be a list of vectors.
+  "Read the responses to a transaction request.
   Return a list of lists, each representing a row of data, plus an alist of metadata.
   Expects its client function to have already sent a PULL message."
   (declare (type bolt-session session)
