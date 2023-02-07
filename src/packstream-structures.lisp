@@ -40,7 +40,7 @@
             :type integer
             :documentation "Node identifier. Mostly useful for correlating with relationships.")
    (node-labels :initarg :node-labels
-                :reader :node-labels
+                :reader node-labels
                 :type list
                 :documentation "The node's labels, represented as a list of strings.")
    (node-properties :initarg :node-properties
@@ -48,6 +48,11 @@
                     :type hash-table
                     :documentation "The node's properties, as a hash-table."))
   (:documentation "Snapshot of a node within a graph database"))
+
+(defmethod print-object ((node node) stream)
+  (print-unreadable-object (node stream :type t :identity t)
+    (format stream "~a~{:~a ~}" (node-id node)
+	    (node-labels node))))
 
 (defclass relationship ()
   ((relationship-id :initarg :relationship-id
@@ -72,6 +77,15 @@
                             :documentation "Properties recorded within this relationship"))
   (:documentation "Snapshot of a relationship within a graph database"))
 
+(defmethod print-object ((rel relationship) stream)
+  (print-unreadable-object (rel stream :type t :identity t)
+    (with-slots (relationship-id relationship-type
+		 start-node-id end-node-id) rel
+      (format stream "~a:~a from: ~a to: ~a"
+	      relationship-id
+	      relationship-type
+	      start-node-id
+	      end-node-id))))
 
 (defclass unbound-relationship ()
   ((id :initarg :id
@@ -86,6 +100,13 @@
                :type hash-table
                :documentation "The documented type is Dictionary, so it's represented here as a hash-table."))
   (:documentation "A relationship without information of start and end node id. It is used internally for Path serialization."))
+
+(defmethod print-object ((rel unbound-relationship) stream)
+  (print-unreadable-object (rel stream :type t :identity t)
+    (with-slots (relationship-id relationship-type) rel
+      (format stream "~a:~a"
+	      relationship-id
+	      relationship-type))))
 
 (defclass path ()
   ((nodes :initarg :nodes
