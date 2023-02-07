@@ -267,8 +267,8 @@
    It's true that you could get the number of octets via `length`, but I'm including this here for consistency with the rest of the decode-<type> functions. This avoids the need to keep track of different return values for different types."
   (declare (type vector vec)
            (type integer offset))
-  ;(log-message :debug (format nil "Parsing a string at offset ~D" offset))
   (let ((stringlength (get-string-length vec offset)))
+    (log-message :debug (format nil "Parsing a string of length ~D at offset ~D" (first stringlength) offset))
     ;; Construct the return value
     (values
       ;; The string itself
@@ -292,7 +292,7 @@
    - integer: the number of octets occupied by the header."
   (declare (type vector vec)
            (type integer offset))
-  ;(log-message :debug (format nil "Parsing a list at offset ~D" offset))
+  (log-message :debug (format nil "Parsing a list at offset ~D in a vector of ~D octets." offset (length vec)))
   (let* ((length-details (get-list-length vec offset))
          (entry-count (first length-details))
          (header-length (second length-details))
@@ -369,6 +369,7 @@
 
 (defun vector-to-node (arr)
   "Take a 3-element array, and return a 'node instance."
+  (log-message :debug "Converting a 3-element vector to a node instance.")
   (make-instance 'node
                  :node-id (aref arr 0)
                  :node-labels (aref arr 1)
@@ -376,6 +377,7 @@
 
 (defun vector-to-relationship (arr)
   "Take a 5-field array, and return a 'relationship instance."
+  (log-message :debug "Converting a 5-element vector to a relationship instance.")
   (make-instance 'relationship
                  :relationship-id (aref arr 0)
                  :start-node-id (aref arr 1)
@@ -385,22 +387,26 @@
 
 (defun vector-to-date (arr)
   "Take a 1-field array, and return a 'date instance."
+  (log-message :debug "Converting a 1-element vector to a date instance.")
   (make-instance 'date
                  :days (aref arr 0)))
 
 (defun vector-to-time (arr)
   "Take a 2-field array, and return a 'timestructure instance."
+  (log-message :debug "Converting a 2-element vector to a timestructure instance.")
   (make-instance 'timestructure
                  :nanoseconds (aref arr 0)
                  :tz-offset-seconds (aref arr 1)))
 
 (defun vector-to-localtime (arr)
   "Take a 1-field array, and return a 'localtime instance."
+  (log-message :debug "Converting a 1-element vector to a localtime instance.")
   (make-instance 'localtime
                  :nanoseconds (aref arr 0)))
 
 (defun vector-to-datetime (arr)
   "Take a 3-field array, and return a 'datetime instance."
+  (log-message :debug "Converting a 3-element vector to a datetime instance.")
   (make-instance 'datetime
                  :seconds (aref arr 0)
                  :nanoseconds (aref arr 1)
@@ -408,6 +414,7 @@
 
 (defun vector-to-datetimezoneid (arr)
   "Take a 3-field array, and return a 'datetimezoneid instance."
+  (log-message :debug "Converting a 3-element vector to a datetimezoneid instance.")
   (make-instance 'datetimezoneid
                  :seconds (aref arr 0)
                  :nanoseconds (aref arr 1)
@@ -415,12 +422,14 @@
 
 (defun vector-to-localdatetime (arr)
   "Take a 2-field array, and return a 'localdatetime instance."
+  (log-message :debug "Converting a 2-element vector to a localdatetime instance.")
   (make-instance 'localdatetime
                  :seconds (aref arr 0)
                  :nanoseconds (aref arr 1)))
 
 (defun vector-to-duration (arr)
   "Take a 4-field array, and return a 'duration instance."
+  (log-message :debug "Converting a 4-element vector to a duration instance.")
   (make-instance 'duration
                  :months (aref arr 0)
                  :days (aref arr 1)
@@ -429,6 +438,7 @@
 
 (defun vector-to-point2d (arr)
   "Take a 3-field array, and return a 'point2d instance."
+  (log-message :debug "Converting a 3-element vector to a point2d instance.")
   (make-instance 'point2d
                  :srid (aref arr 0)
                  :x (aref arr 1)
@@ -436,6 +446,7 @@
 
 (defun vector-to-point3d (arr)
   "Take a 4-field array, and return a 'point3d instance."
+  (log-message :debug "Converting a 4-element vector to a point3d instance.")
   (make-instance 'point3d
                  :srid (aref arr 0)
                  :x (aref arr 1)
@@ -467,9 +478,14 @@
     (loop for i from 0 to (- num-fields 1)
           do (multiple-value-bind (value len hdrlen)
                (decode-element vec pointer)
+               ;; Set the accumulator to the value that was extracted
                (setf (aref acc i) value)
-               (setf pointer (+ pointer len hdrlen))))
-    ;; Return the result, counting the tag-byte as part of the header, not part of the payload.
+               ;; Move the pointer to the start of the next field
+               (setf pointer (+ pointer len hdrlen))
+               ;; Report on progress
+               (log-message :debug (format nil "Decoded element ~D with a body-length of ~D and a header-length of ~D."
+                                           i len hdrlen))))
+    ;; Return the result, counting the tag-byte as part of the header, not part of the payload
     (values
       ;; Create a valid return value from the vector, dispatching on the structure-type
       (cond
@@ -517,7 +533,8 @@
   (declare (type vector vec)
            (type integer offset))
   (let ((element-type (identify-marker (aref vec offset))))
-    ;(log-message :debug (format nil "Parsing an element of type ~A, from offset ~D." element-type offset))
+    (log-message :debug (format nil "Parsing an element of type ~A, from offset ~D in a vector of ~D octets."
+                                element-type offset (length vec)))
     (cond
       ;; Null
       ((equal "Null" element-type)
@@ -532,6 +549,8 @@
       ;; Float
       ((equal "Float" element-type) (read-float vec offset))
       ;; Bytes
+      ;; - not yet implemented
+      ;((equal "Bytes" element-type) (decode-bytes vec offset))
       ;; String
       ((equal "String" element-type) (decode-string vec offset))
       ;; List
