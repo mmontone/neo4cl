@@ -58,18 +58,23 @@
   (declare (type (unsigned-byte 8) tag))
   ;; If we got here, I have NFI WTF it is.
   (cond
-    ((equal #x4e tag) "Node")  ; #\N
-    ((equal #x52 tag) "Relationship")  ; #\R
-    ((equal #x72 tag) "UnboundRelationship")  ; #\r
-    ((equal #x50 tag) "Path")  ; #\P
     ((equal #x44 tag) "Date")  ; #\D
-    ((equal #x54 tag) "Time")  ; #\T
-    ((equal #x74 tag) "LocalTime")  ; #\t
-    ((equal #x66 tag) "DateTimeZoneId")  ; #\f
     ((equal #x45 tag) "Duration")  ; #\E
+    ((equal #x46 tag) "DateTime")  ; #\F (Legacy)
+    ((equal #x4e tag) "Node")  ; #\N
+    ((equal #x50 tag) "Path")  ; #\P
+    ((equal #x52 tag) "Relationship")  ; #\R
+    ((equal #x54 tag) "Time")  ; #\T
     ((equal #x58 tag) "Point2D")  ; #\X
     ((equal #x59 tag) "Point3D")  ; #\Y
-    (t nil)))
+    ((equal #x64 tag) "LocalDateTime")  ; #\d
+    ((equal #x66 tag) "DateTimeZoneId")  ; #\f
+    ((equal #x72 tag) "UnboundRelationship")  ; #\r
+    ((equal #x74 tag) "LocalTime")  ; #\t
+    ;; This should really be handled here, before it gets any further
+    (t (error 'packstream-error
+                :category "parsing"
+                :message (format nil "Unhandled tag-byte #x~X" tag)))))
 
 (defun get-string-length (vec offset)
   "Convenience function, wrapped around get-element-length."
@@ -447,14 +452,14 @@
          (num-fields (ldb (byte 4 0) (aref vec offset)))
          ;; Create an intermediate accumulator
          (acc (make-array num-fields))
-         ;; Extract the tag-byte for later reference
-         (tag-byte (aref vec (+ offset 1)))
+         ;; Extract the structure-type for later reference
+         (structure-type (identify-structure-node (aref vec (+ offset 1))))
          ;; Initialise the pointer used for iterating through the vector,
          ;; and then for calculating the structure's size in octets.
          (pointer (+ offset 2)))
-    (log-message :debug (format nil "Decoding a #x~X Structure with ~D elements."
-                                tag-byte num-fields))
-    ;; Extract the fields, and insert them into the accumulator
+    (log-message :debug (format nil "Decoding a ~A Structure with ~D elements."
+                                structure-type num-fields))
+    ;; Extract each field, and insert it into the accumulator
     (loop for i from 0 to (- num-fields 1)
           do (multiple-value-bind (value len hdrlen)
                (decode-element vec pointer)
@@ -462,47 +467,37 @@
                (setf pointer (+ pointer len hdrlen))))
     ;; Return the result, counting the tag-byte as part of the header, not part of the payload.
     (values
-      ;; Create a valid return value from the vector,
-      ;; dispatching on the tag-byte.
+      ;; Create a valid return value from the vector, dispatching on the structure-type
       (cond
-        ;; Tag-byte = N for Node
-        ((equal #x4e tag-byte)
+        ((equal "Node" structure-type)
          (vector-to-node acc))
-        ;; Tag-byte = R for Relationship
-        ((equal #x52 tag-byte)
+        ((equal "Relationship" structure-type)
          (vector-to-relationship acc))
-        ;; Tag-byte = D for Date
-        ((equal #x44 tag-byte)
+        ((equal "Date" structure-type)
          (vector-to-date acc))
-        ;; Tag-byte = T for Time
-        ((equal #x54 tag-byte)
+        ((equal "Time" structure-type)
          (vector-to-time acc))
-        ;; Tag-byte = t for LocalTime
-        ((equal #x74 tag-byte)
+        ((equal "LocalTime" structure-type)
          (vector-to-localtime acc))
-        ;; Tag-byte = F for DateTime
-        ((equal #x46 tag-byte)
+        ((equal "DateTime" structure-type)
          (vector-to-datetime acc))
-        ;; Tag-byte = f for DateTimeZoneId
-        ((equal #x66 tag-byte)
+        ((equal "DateTimeZoneId" structure-type)
          (vector-to-datetimezoneid acc))
-        ;; Tag-byte = d for LocalDateTime
-        ((equal #xd tag-byte)
+        ((equal "LocalDateTime" structure-type)
          (vector-to-localdatetime acc))
-        ;; Tag-byte = E for Duration
-        ((equal #x45 tag-byte)
+        ((equal "Duration" structure-type)
          (vector-to-duration acc))
-        ;; Tag-byte = X for Point2d
-        ((equal #x58 tag-byte)
+        ((equal "Point2D" structure-type)
          (vector-to-point2d acc))
-        ;; Tag-byte = Y for Point3d
-        ((equal #x59 tag-byte)
+        ((equal "Point3D" structure-type)
          (vector-to-point3d acc))
-        ;; Fall back to error
+        ;; Technically, this should be redundant, however
+        ;; a) It's good practice to have a catch-all case
+        ;; b) "shouldn't be possible" never stopped it actually happening.
         (t
          (error 'packstream-error
                 :category "parsing"
-                :message (format nil "Unhandled tag-byte #x~X" tag-byte))))
+                :message (format nil "Unknown structure-type '~A'" structure-type))))
       ;; Calculate the number of octets occupied by the structure within the vector.
       (- pointer offset 2)
       ;; Header-length = marker byte + tag-byte = 2 octets
