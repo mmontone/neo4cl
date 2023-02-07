@@ -25,24 +25,44 @@
   ((category :initarg :category :reader category)
    (title :initarg :title :reader title)
    (message :initarg :message :reader message))
-  (:documentation "The Client sent a bad request - changing the request might yield a successful outcome. Effect on transaction: rollback."))
+  (:report (lambda (condition stream)
+             (format stream "Client error [~A] '~A': ~A"
+                     (category condition)
+                     (title condition)
+                     (message condition))))
+  (:documentation "The Client sent a bad request - changing the request might yield a successful outcome. Expected effect on transaction: rollback."))
 
 (define-condition client-notification ()
   ((category :initarg :category :reader category)
    (title :initarg :title :reader title)
    (message :initarg :message :reader message))
-   (:documentation "There are notifications about the request sent by the client. Effect on transaction: none."))
+  (:report (lambda (condition stream)
+             (format stream "Client notification [~A] '~A': ~A"
+                     (category condition)
+                     (title condition)
+                     (message condition))))
+  (:documentation "There are notifications about the request sent by the client. Effect on transaction: none."))
 
 (define-condition transient-error (error)
   ((category :initarg :category :reader category)
    (title :initarg :title :reader title)
    (message :initarg :message :reader message))
+  (:report (lambda (condition stream)
+             (format stream "Transient error [~A] '~A': ~A"
+                     (category condition)
+                     (title condition)
+                     (message condition))))
   (:documentation "The database cannot service the request right now, retrying later might yield a successful outcome. Effect on transaction: rollback."))
 
 (define-condition database-error (error)
   ((category :initarg :category :reader category)
    (title :initarg :title :reader title)
    (message :initarg :message :reader message))
+  (:report (lambda (condition stream)
+             (format stream "Database error [~A] '~A': ~A"
+                     (category condition)
+                     (title condition)
+                     (message condition))))
   (:documentation "The database failed to service the request. Effect on transaction: rollback."))
 
 
@@ -51,18 +71,26 @@
 (define-condition service-error (error)
   ((category :initarg :category :reader category)
    (message :initarg :message :reader message))
+  (:report (lambda (condition stream)
+             (format stream "Service error [~A]: ~A"
+                     (category condition)
+                     (message condition))))
   (:documentation "Conditions _not_ reported from Neo4J, like connection refused"))
 
 (define-condition bolt-error (error)
   ((category :initarg :category :reader category)
    (message :initarg :message :reader message))
   (:report (lambda (condition stream)
-	     (format stream "Bolt error [~a]: ~a"
-		     (category condition)
-		     (message condition))))
+             (format stream "Bolt error [~A]: ~A"
+                     (category condition)
+                     (message condition))))
   (:documentation "The server reported an error relating to a Bolt session."))
 
 (define-condition packstream-error (error)
   ((category :initarg :category :reader category)
    (message :initarg :message :reader message))
+  (:report (lambda (condition stream)
+             (format stream "Packstream error [~A]: ~A"
+                     (category condition)
+                     (message condition))))
   (:documentation "Some kind of issue relating to Packstream serialisation/deserialisation."))
