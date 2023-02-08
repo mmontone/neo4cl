@@ -539,7 +539,7 @@
 
 (defgeneric bolt-transaction-autocommit (session query &key parameters)
   (:documentation "Perform an autocommit transaction.
-                   :parameters argument can be either an alist or a hash-table. alist is typically the low-overhead option, but it'll break if any of the values are null."))
+                   :parameters argument must be an alist; note that it'll break if any of the values are null."))
 
 (defmethod bolt-transaction-autocommit ((session bolt-session)
                                         (query string)

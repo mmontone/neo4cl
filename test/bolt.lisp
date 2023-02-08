@@ -105,18 +105,6 @@
                            (("name" . "baz") ("label" . "foo")))
                          result)))
     (fiveam:is (null (neo4cl:bolt-transaction-autocommit session "MATCH (p:foo) DELETE p")))
-    ;; Parameterised CREATE - hash-table edition
-    (let ((params (make-hash-table :test #'equal)))
-      (setf (gethash "colour" params) "blue")
-      (fiveam:is (null (neo4cl:bolt-transaction-autocommit
-                         session
-                         "CREATE (:baz {colour: $colour})"
-                         :parameters params))))
-    (fiveam:is (equal '((("labels" . "baz") ("colour" . "blue")))
-                      (neo4cl:bolt-transaction-autocommit
-                        session
-                        "MATCH (p:baz) RETURN LABELS(p) AS labels, p.colour AS colour")))
-    (fiveam:is (null (neo4cl:bolt-transaction-autocommit session "MATCH (p:baz) DELETE p")))
     ;; Parameterised CREATE - alist edition
     (fiveam:is (null (neo4cl:bolt-transaction-autocommit
                        session
