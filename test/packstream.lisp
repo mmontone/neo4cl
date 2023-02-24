@@ -123,6 +123,7 @@
   (fiveam:is (equalp (vector neo4cl::+packstream-false+)
                      (neo4cl::encode-element :false)))
   ;; Null
+  (fiveam:is (equalp (vector #xc0) (neo4cl::encode-element nil)))
   (fiveam:is (equalp (vector #xc0) (neo4cl::encode-element :null)))
   ;; Integers
   (fiveam:is (equalp (vector #x2a) (neo4cl::encode-element 42)))

@@ -293,6 +293,9 @@
 (defgeneric encode-element (element)
   (:documentation "Encode a thing into Packstream format. Note that an empty list will be encoded as Null, not as a zero-element list."))
 
+(defmethod encode-element ((element null))
+  (encode-null))
+
 (defmethod encode-element ((element (eql :null)))
   (encode-null))
 
