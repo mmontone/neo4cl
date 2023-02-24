@@ -13,7 +13,7 @@ Neo4CL is very simple library that sends Cypher queries to a Neo4J server, and d
 
 ## Status
 
-Alpha: it works and there's a test suite, but not all functionality is implemented yet, and it hasn't been fully production-tested.
+Beta: it works and there's a test suite, but not all functionality is implemented yet.
 
 Working:
 
@@ -23,6 +23,7 @@ Working:
     - I.e, it will reassemble multi-chunk messages _received from_ the server in response to queries.
 - Lisp -> Packstream implementation:
     - `nil` -> `Null`
+    - `:null` -> `Null`
     - `Boolean`
     - `string` -> `String`
     - `integer` -> `Integer`
